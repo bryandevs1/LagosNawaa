@@ -59,25 +59,34 @@ const Login = ({ navigation }) => {
         }
       );
 
-      const { token } = response.data;
+      if (response.data.token) {
+        const { token, user_nicename, user_email } = response.data;
 
-      // Save the token in AsyncStorage
-      await AsyncStorage.setItem("userToken", token);
+        // Save the token and user data in AsyncStorage
+        await AsyncStorage.setItem("userToken", token);
+        await AsyncStorage.setItem("userName", user_nicename);
+        await AsyncStorage.setItem("userEmail", user_email);
 
-      // Navigate to the next screen
-      // Show success toast and navigate to the next screen after 5 seconds
-      Toast.show({
-        type: "success",
-        text1: "Login Successful",
-        text2: "Welcome back!",
-      });
+        // Show success toast and navigate to the next screen
+        Toast.show({
+          type: "success",
+          text1: "Login Successful",
+          text2: "Welcome back!",
+        });
 
-      setTimeout(() => {
-        navigation.navigate("Home"); // Replace "Home" with your actual home screen route
-      }, 3000);
+        navigation.navigate("Tabs"); // Change "(tabs)" to your home route
+      } else {
+        showToast("error", "Invalid login response. Please try again.");
+      }
     } catch (error) {
-      showToast("error", "Login Failed: Invalid username or password.");
-      console.error("Login error:", error);
+      if (error.response) {
+        // Handle server errors (status code 400 or 500)
+        const errorMessage = error.response.data.message || "Login failed";
+        showToast("error", errorMessage);
+      } else {
+        // Handle network or other errors
+        showToast("error", "Network error, please try again.");
+      }
     } finally {
       setLoading(false);
     }

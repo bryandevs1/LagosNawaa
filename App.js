@@ -7,7 +7,7 @@ import SplashScreen from "./src/screens/SplashScreen";
 import { Onboarding } from "./src/screens/Onboarding";
 import Login from "./src/screens/Login";
 import Register from "./src/screens/Register";
-import Home from "./src/screens/Home";
+import TabsNavigator from "./app/_layout.tsx"; // Import your TabsNavigator
 import Toast from "react-native-toast-message";
 
 const Stack = createStackNavigator();
@@ -16,7 +16,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Register">
+        <Stack.Navigator initialRouteName="Tabs">
           <Stack.Screen
             options={{ headerShown: false }}
             name="Splash"
@@ -35,10 +35,9 @@ export default function App() {
           />
           <Stack.Screen
             options={{ headerShown: false }}
-            name="Home"
-            component={Home}
+            name="Tabs"
+            component={TabsNavigator} // Add the TabsNavigator here
           />
-          {/* Add more screens here */}
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>
