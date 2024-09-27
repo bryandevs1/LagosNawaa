@@ -15,7 +15,6 @@ export default function TabsNavigator() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          
 
           // Assign FontAwesome icons based on route name
           if (route.name === "Home") {
@@ -32,7 +31,7 @@ export default function TabsNavigator() {
           return (
             <FontAwesome5
               name={iconName}
-              size= "20"
+              size={20}
               color={color}
               style={styles.icon}
             />
@@ -42,6 +41,7 @@ export default function TabsNavigator() {
         tabBarInactiveTintColor: "#999", // Color for inactive icons
         tabBarStyle: styles.tabBar, // Style for the floating tab bar
         tabBarShowLabel: false, // Hide labels
+        headerShown: false, // Hide headers for all screens
       })}
     >
       <Tab.Screen name="Home" component={Home} />

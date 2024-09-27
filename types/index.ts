@@ -1,7 +1,9 @@
 export interface NewsDataType {
+  id: string;
   article_id: string;
   title: string;
   link: string;
+  author: string;
   keywords: string[];
   creator: null;
   video_url: null;
@@ -23,6 +25,13 @@ export interface NewsDataType {
   sentiment: string;
   sentiment_stats: Sentimentstats;
   duplicate: boolean;
+  _embedded?: {
+    "wp:featuredmedia"?: [
+      {
+        source_url: string;
+      }
+    ];
+  };
 }
 
 interface Sentimentstats {

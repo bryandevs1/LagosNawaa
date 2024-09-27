@@ -9,6 +9,10 @@ import Login from "./src/screens/Login";
 import Register from "./src/screens/Register";
 import TabsNavigator from "./app/_layout.tsx"; // Import your TabsNavigator
 import Toast from "react-native-toast-message";
+import NewsDetailScreen from "./app/news/[id]";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
+import Search from "./components/Search";
 
 const Stack = createStackNavigator();
 
@@ -38,6 +42,26 @@ export default function App() {
             name="Tabs"
             component={TabsNavigator} // Add the TabsNavigator here
           />
+          <Stack.Screen
+            name="NewsDetail"
+            component={NewsDetailScreen}
+            options={({ navigation }) => ({
+              headerShown: true,
+              headerBackTitleVisible: false,
+              headerTitle: "", // Remove the title
+              // Add custom back arrow button
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                  <Ionicons
+                    name="arrow-back" // Custom back arrow icon
+                    style={{ marginLeft: 20 }}
+                    size={25} // Customize the size and style
+                  />
+                </TouchableOpacity>
+              ),
+            })}
+          />
+          <Stack.Screen name="Search results" component={Search} />
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>

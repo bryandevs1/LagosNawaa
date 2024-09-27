@@ -67,6 +67,22 @@ const Login = ({ navigation }) => {
         await AsyncStorage.setItem("userName", user_nicename);
         await AsyncStorage.setItem("userEmail", user_email);
 
+        // Fetch the user's profile to get the avatar URL
+        const userProfileResponse = await axios.get(
+          `https://lagosnawa.com/wp-json/wp/v2/users/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Save the profile image if it exists
+        const profileImage = userProfileResponse.data.avatar_urls?.[96] || null; // The avatar URL is typically available in different sizes
+        if (profileImage) {
+          await AsyncStorage.setItem("userProfileImage", profileImage);
+        }
+
         // Show success toast and navigate to the next screen
         Toast.show({
           type: "success",
@@ -74,7 +90,7 @@ const Login = ({ navigation }) => {
           text2: "Welcome back!",
         });
 
-        navigation.navigate("Tabs"); // Change "(tabs)" to your home route
+        navigation.navigate("Tabs"); // Navigate to your home route
       } else {
         showToast("error", "Invalid login response. Please try again.");
       }
