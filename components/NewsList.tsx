@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 20,
     gap: 10,
+    backgroundColor: "#fff",
   },
   newsImage: {
     width: 100,

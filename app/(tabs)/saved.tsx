@@ -160,6 +160,7 @@ const SavedScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.bookmarkTitle}>Saved Bookmarks</Text>
       <FlatList
         data={newsData}
         keyExtractor={(item) => item.id.toString()}
@@ -168,7 +169,7 @@ const SavedScreen = () => {
       />
     </View>
   );
-};
+}
 
 export default SavedScreen;
 
@@ -178,12 +179,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingTop: 100,
   },
+  bookmarkTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#a80d0d",
+    textShadowColor: "rgba(0, 0, 0, 0.2)", // Adds a cool shadow effect
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
+    marginBottom: 20, // Space between the title and the list
+    marginTop: -30, // Space between the title and the news list
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
   newsItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -215,7 +226,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-
   buttonContainer: {
     width: "70%", // Full width of the container
     alignContent: "center",
@@ -234,3 +244,4 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
+

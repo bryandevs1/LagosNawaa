@@ -1,20 +1,23 @@
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-
-type Props = {};
 
 const SearchBar = ({ value, onChangeText }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.searchBar}>
+      <TouchableOpacity style={styles.searchBar} activeOpacity={1}>
         <Ionicons name="search-outline" size={24} color="black" />
         <TextInput
+          style={styles.input}
           placeholder="Search"
           value={value}
           onChangeText={onChangeText}
+          placeholderTextColor="#999"
+          returnKeyType="search"
+          autoCorrect={false}
+          blurOnSubmit
         />
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -26,25 +29,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 10,
   },
   searchBar: {
-    height: 40,
+    height: 50,
     width: "90%",
-    borderRadius: 20,
+    borderRadius: 25,
     backgroundColor: "#E6E6E6",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    display: "flex",
+    paddingHorizontal: 15,
     flexDirection: "row",
-    gap: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
-  search: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
-    backgroundColor: "#E6E6E6",
-    justifyContent: "flex-end",
-    alignSelf: "flex-end",
+  input: {
+    flex: 1,
     marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });

@@ -16,6 +16,7 @@ import FontSize from "../constants/FontSize";
 import { theme } from "../constants/theme";
 import Spacing from "../constants/Spacing";
 import { Feather } from "@expo/vector-icons";
+import KeyboardAvoidingComponent from "../../components/KeyboardAvoidingView";
 
 const Login = ({ navigation }) => {
   const [isSecure, setIsSecure] = useState(true);
@@ -109,65 +110,70 @@ const Login = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView>
-      <View style={styles.container}>
-        <Image style={styles.logo} source={require("../assets/chat.png")} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>Sign In</Text>
-          <Text style={styles.subtitle}>
-            Welcome Back, You have been missed
-          </Text>
-        </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Username or Email Address"
-            placeholderTextColor="rgba(168, 13, 13, 0.3)"
-            style={styles.textInput}
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-          />
-          <View style={styles.passwordContainer}>
+    <KeyboardAvoidingComponent>
+      <SafeAreaView>
+        <View style={styles.container}>
+          <Image style={styles.logo} source={require("../assets/chat.png")} />
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Sign In</Text>
+            <Text style={styles.subtitle}>
+              Welcome Back, You have been missed
+            </Text>
+          </View>
+          <View style={styles.inputContainer}>
             <TextInput
-              placeholder="Password"
+              placeholder="Username or Email Address"
               placeholderTextColor="rgba(168, 13, 13, 0.3)"
-              secureTextEntry={isSecure}
-              style={[styles.textInput, styles.passwordInput]}
-              value={password}
-              onChangeText={setPassword}
+              style={styles.textInput}
+              value={username}
+              onChangeText={setUsername}
               autoCapitalize="none"
             />
-            <TouchableOpacity
-              onPress={togglePasswordVisibility}
-              style={styles.eyeIcon}
-            >
-              <Feather
-                name={isSecure ? "eye-off" : "eye"}
-                size={20}
-                color={theme.colors.backgroundColor}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                placeholder="Password"
+                placeholderTextColor="rgba(168, 13, 13, 0.3)"
+                secureTextEntry={isSecure}
+                style={[styles.textInput, styles.passwordInput]}
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={togglePasswordVisibility}
+                style={styles.eyeIcon}
+              >
+                <Feather
+                  name={isSecure ? "eye-off" : "eye"}
+                  size={20}
+                  color={theme.colors.backgroundColor}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+          <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
+            <Text style={styles.forgotPassword}>Forgotten your password?</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? "Logging in..." : "Login"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={styles.switch}>
+              Don't have an Account?{" "}
+              <Text style={{ fontWeight: 800 }}>Sign up Now</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
-        <Text style={styles.forgotPassword}>Forgotten your password?</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.loginButtonText}>
-            {loading ? "Logging in..." : "Login"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.switch}>
-            Don't have an Account?{" "}
-            <Text style={{ fontWeight: 800 }}>Sign up Now</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <Toast />
-    </SafeAreaView>
+
+        <Toast />
+      </SafeAreaView>
+    </KeyboardAvoidingComponent>
   );
 };
 

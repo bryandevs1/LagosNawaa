@@ -55,11 +55,7 @@ export default function TabsNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute", // Make tab bar float
-    bottom: 20, // Space from bottom
-    left: 20, // Space from left
-    right: 20, // Space from right
-    elevation: 5, // Elevation for shadow (Android)
-    backgroundColor: "rgba(255, 255, 255, 0.9)", // Glassy effect
+    backgroundColor: "rgb(255, 255, 255)", // Glassy effect
     borderRadius: 30, // Rounded corners
     height: 70, // Increased height of the tab bar to ensure full icon visibility
     borderWidth: 1, // Border for glassy effect
@@ -68,7 +64,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 }, // Shadow offset (iOS)
     shadowOpacity: 0.1, // Shadow opacity (iOS)
     shadowRadius: 20, // Shadow radius (iOS)
-    paddingBottom: 0, // Add some bottom padding to ensure icons fit
   },
   icon: {
     shadowOffset: { width: 0, height: 0 },

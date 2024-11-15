@@ -4,8 +4,9 @@ import {
   Text,
   View,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "../../components/Header";
 import SearchBar from "../../components/SearchBar";
@@ -16,30 +17,28 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Categories from "../../components/Categories";
 import NewsList from "../../components/NewsList";
 import { ScrollView } from "react-native-gesture-handler";
-import { decode } from "html-entities"; // Import the decode function
-import { useIsFocused } from "@react-navigation/native";
+import { decode } from "html-entities";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 
-type Props = {};
-
-const Page = (props: Props) => {
-  const decodeHtmlEntities = (str) => {
-    return decode(str);
-  };
+const Page = () => {
   const { top: safeTop } = useSafeAreaInsets();
   const [breakingNews, setBreakingNews] = useState<NewsDataType[]>([]);
   const [news, setNews] = useState<NewsDataType[]>([]);
-  const [loading, setLoading] = useState(false); // State to manage loading
-  const [page, setPage] = useState(1); // Track the current page
-  const [hasMore, setHasMore] = useState(true); // To check if there are more posts
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const isFocused = useIsFocused(); // Add this to track if the page is focused
+  const isFocused = useIsFocused();
+  const scrollRef = useRef(null); // Ref to control the scroll position
 
   useEffect(() => {
     if (isFocused) {
-      getBreakingNews(); // Refetch breaking news when the page is focused
-      getNews(0); // Refetch news when the page is focused
+      getBreakingNews();
+      getNews(0);
     }
-  }, [isFocused]); // Rerun when `isFocused` changes
+  }, [isFocused]);
 
   const getBreakingNews = async () => {
     try {
@@ -56,7 +55,6 @@ const Page = (props: Props) => {
         },
       });
       if (response && response.data) {
-        // Decode the title and content before setting it in the state
         const decodedData = response.data.map((post: any) => ({
           ...post,
           title: {
@@ -76,7 +74,7 @@ const Page = (props: Props) => {
   const getNews = async (categoryId: number = 0, page = 1) => {
     let categoryString = "";
     if (categoryId !== 0) {
-      categoryString = `&categories=${categoryId}`; // Correctly use category ID for filtering
+      categoryString = `&categories=${categoryId}`;
     }
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -88,7 +86,7 @@ const Page = (props: Props) => {
 
       setLoading(true);
 
-      const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?per_page=100&page=${page}&_embed&${categoryString}`;
+      const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?per_page=10&page=${page}&_embed${categoryString}`;
 
       const response = await axios.get(URL, {
         headers: {
@@ -108,14 +106,12 @@ const Page = (props: Props) => {
         }));
 
         if (page === 1) {
-          setNews(decodedData); // First page load
+          setNews(decodedData);
         } else {
-          setNews((prevNews) => [...prevNews, ...decodedData]); // Append more data
+          setNews((prevNews) => [...prevNews, ...decodedData]);
         }
 
-        if (response.data.length < 10) {
-          setHasMore(false); // No more pages if fewer posts are returned
-        }
+        setHasMore(response.data.length >= 10);
       }
     } catch (err) {
       console.log("Error Message: ", err.message);
@@ -124,33 +120,44 @@ const Page = (props: Props) => {
     }
   };
 
-  // Load more function
   const loadMore = () => {
     if (hasMore && !loading) {
       setPage((prevPage) => prevPage + 1);
-      getNews(page + 1);
+      getNews(selectedCategory, page + 1);
     }
   };
-  const [selectedCategory, setSelectedCategory] = useState("all"); // Default to 'all'
 
-  // Function to handle category change
-  const handleCategoryChange = (categoryId: number) => {
-    console.log("Selected Category ID: ", categoryId);
-    setPage(1); // Reset the page number to 1 when switching categories
-    getNews(categoryId, 1); // Fetch news for the selected category ID, reset to page 1
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setPage(1);
+    getNews(categoryId, 1);
+    scrollRef.current.scrollTo({ y: 0, animated: true });
+  };
+  const navigation = useNavigation();
+
+  const handleSearch = () => {
+    navigation.navigate("Discover", { searchQuery });
   };
 
   return (
     <View style={[styles.container, { paddingTop: safeTop }]}>
       <Header />
-      <SearchBar />
-      <ScrollView>
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onSearch={handleSearch} // Trigger navigation to Discover
+      />
+      <ScrollView ref={scrollRef} stickyHeaderIndices={[1]}>
         <BreakingNews newsList={breakingNews} />
-        <Categories onCategoryChanged={handleCategoryChange} />
+        <View style={styles.stickyCategoriesContainer}>
+          <Categories onCategoryChanged={handleCategoryChange} />
+        </View>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
-          <NewsList newsList={news} />
+          <View style={{ backgroundColor: "#fff" }}>
+            <NewsList newsList={news} onEndReached={loadMore} />
+          </View>
         )}
       </ScrollView>
     </View>
@@ -162,5 +169,14 @@ export default Page;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  stickyCategoriesContainer: {
+    backgroundColor: "#fff",
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });

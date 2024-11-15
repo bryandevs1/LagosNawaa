@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+} from "react-native"; // Notice Platform is imported hereimport { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 import Font from "../constants/Font";
@@ -115,135 +117,148 @@ const Register = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        "https://lagosnawa.com/wp-json/custom/v1/register",
+        "https://lagosnawa.com/wp-json/custom/v1/register", // Replace with your site URL
         {
           name: fullName,
           username,
           email,
           password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
-      // Handle successful registration
-      Toast.show({
-        type: "success",
-        text1: "Registration Successful",
-        text2: "You can now access the app.",
-      });
+      if (response.status === 200) {
+        Toast.show({
+          type: "success",
+          text1: "Registration Successful",
+          text2: "You can now access the app.",
+        });
 
-      // Navigate to the login screen after 5 seconds
-      setTimeout(() => {
-        navigation.navigate("Home");
-      }, 3000);
+        // Navigate to the login screen after 5 seconds
+        setTimeout(() => {
+          navigation.navigate("Tabs");
+        }, 3000);
+      } else {
+        showToast("Registration failed, please try again.");
+      }
     } catch (error) {
-      showToast(
-        "Registration Failed: " +
-          (error.response?.data?.message || "Unknown error.")
-      );
-      console.error("Registration error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "An error occurred during registration.";
+      showToast(`Registration Failed: ${errorMessage}`);
+      console.error("Registration error:", error); // Logs detailed error info
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <SafeAreaView>
-      <ScrollView>
-        <View style={styles.container}>
-          <Image style={styles.logo} source={require("../assets/chat.png")} />
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>Sign Up</Text>
-            <Text style={styles.subtitle}>
-              Join us and stay informed with the latest news tailored to you
-            </Text>
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Full Name"
-              placeholderTextColor="rgba(168, 13, 13, 0.3)"
-              style={styles.textInput}
-              value={fullName}
-              onChangeText={setFullName}
-            />
-            <TextInput
-              placeholder="Username"
-              placeholderTextColor="rgba(168, 13, 13, 0.3)"
-              style={styles.textInput}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-            <TextInput
-              placeholder="Email Address"
-              placeholderTextColor="rgba(168, 13, 13, 0.3)"
-              style={styles.textInput}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <View style={styles.passwordContainer}>
+return(
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.container}>
+            <Image style={styles.logo} source={require("../assets/chat.png")} />
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>Sign Up</Text>
+              <Text style={styles.subtitle}>
+                Join us and stay informed with the latest news tailored to you
+              </Text>
+            </View>
+            <View style={styles.inputContainer}>
               <TextInput
-                placeholder="Password"
+                placeholder="Full Name"
                 placeholderTextColor="rgba(168, 13, 13, 0.3)"
-                secureTextEntry={isSecurePassword}
-                style={[styles.textInput, styles.passwordInput]}
-                value={password}
-                onChangeText={setPassword}
+                style={styles.textInput}
+                value={fullName}
+                onChangeText={setFullName}
+              />
+              <TextInput
+                placeholder="Username"
+                placeholderTextColor="rgba(168, 13, 13, 0.3)"
+                style={styles.textInput}
+                value={username}
+                onChangeText={setUsername}
                 autoCapitalize="none"
               />
-              <TouchableOpacity
-                onPress={togglePasswordVisibility}
-                style={styles.eyeIcon}
-              >
-                <Feather
-                  name={isSecurePassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={theme.colors.backgroundColor}
-                />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.passwordContainer}>
               <TextInput
-                placeholder="Confirm Password"
+                placeholder="Email Address"
                 placeholderTextColor="rgba(168, 13, 13, 0.3)"
-                secureTextEntry={isSecureConfirmPassword}
-                style={[styles.textInput, styles.passwordInput]}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                style={styles.textInput}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
                 autoCapitalize="none"
               />
-              <TouchableOpacity
-                onPress={toggleConfirmPasswordVisibility}
-                style={styles.eyeIcon}
-              >
-                <Feather
-                  name={isSecureConfirmPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={theme.colors.backgroundColor}
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Password"
+                  placeholderTextColor="rgba(168, 13, 13, 0.3)"
+                  secureTextEntry={isSecurePassword}
+                  style={[styles.textInput, styles.passwordInput]}
+                  value={password}
+                  onChangeText={setPassword}
+                  autoCapitalize="none"
                 />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={togglePasswordVisibility}
+                  style={styles.eyeIcon}
+                >
+                  <Feather
+                    name={isSecurePassword ? "eye-off" : "eye"}
+                    size={20}
+                    color={theme.colors.backgroundColor}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Confirm Password"
+                  placeholderTextColor="rgba(168, 13, 13, 0.3)"
+                  secureTextEntry={isSecureConfirmPassword}
+                  style={[styles.textInput, styles.passwordInput]}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={toggleConfirmPasswordVisibility}
+                  style={styles.eyeIcon}
+                >
+                  <Feather
+                    name={isSecureConfirmPassword ? "eye-off" : "eye"}
+                    size={20}
+                    color={theme.colors.backgroundColor}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.signUpButtonText}>
+                {loading ? "Signing up..." : "Sign Up"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+              <Text style={styles.switch}>
+                Already have an Account?{" "}
+                <Text style={{ fontWeight: 800 }}>Sign In</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.signUpButtonText}>
-              {loading ? "Signing up..." : "Sign Up"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.switch}>
-              Already have an Account?{" "}
-              <Text style={{ fontWeight: 800 }}>Sign In</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      <Toast />
-    </SafeAreaView>
+        </ScrollView>
+        <Toast />
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
