@@ -15,6 +15,7 @@ import { Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import StyledButton from "../../components/StyledButton";
 import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingView";
+import immagee from "./icon.png";
 
 const { width } = Dimensions.get("window");
 
@@ -113,15 +114,18 @@ const NewsDetails = ({ navigation }) => {
   };
 
   // Render each comment
-const renderComment = ({ item }) => (
-  <View style={styles.comment}>
-    <Text style={styles.commentAuthor}>{item.author_name}</Text>
-    <Text style={styles.commentText}>
-      {item.content.rendered.replace(/<\/?p>/g, "")} {/* Remove <p> tags */}
-    </Text>
-  </View>
-);
-
+  const renderComment = ({ item }) => (
+    <View style={styles.comment}>
+      <Text style={styles.commentAuthor}>{item.author_name}</Text>
+      <Text style={styles.commentText}>
+        {item.content.rendered.replace(/<\/?p>/g, "")} {/* Remove <p> tags */}
+      </Text>
+    </View>
+  );
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
 
   return (
     <View style={styles.container}>
@@ -134,10 +138,10 @@ const renderComment = ({ item }) => (
 
         {/* Author Info and Date */}
         <View style={styles.authorRow}>
-          <Image source={{ uri: authorImageUrl }} style={styles.authorImage} />
+          <Image source={immagee} style={styles.authorImage} />
           <View>
-            <Text style={styles.authorName}>{authorName}</Text>
-            <Text style={styles.date}>{date}</Text>
+            <Text style={styles.authorName}>Lagosnawa</Text>
+            <Text style={styles.date}>{formatDate(date)}</Text>
           </View>
         </View>
 
@@ -172,7 +176,7 @@ const renderComment = ({ item }) => (
           />
         </View>
       </ScrollView>
-      </View>
+    </View>
   );
 };
 

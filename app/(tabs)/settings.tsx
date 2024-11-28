@@ -1,46 +1,132 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
-  Text,
+  SafeAreaView,
+  ScrollView,
   View,
-  Image,
+  Text,
   TouchableOpacity,
-  ActivityIndicator,
   Switch,
+  Image,
   Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Picker } from "@react-native-picker/picker";
+import { Linking } from "react-native";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
-import { ScrollView } from "react-native-gesture-handler";
+import FeatherIcon from "@expo/vector-icons/Feather";
 
-const ProfileScreen = () => {
+export default function ProfileScreen() {
+  const openWebsite = (url: string) => {
+    Linking.openURL(url).catch((err) => {
+      console.error("Failed to open URL:", err);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open the website.",
+      });
+    });
+  };
+
   const navigation = useNavigation();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
-  const [isDisplayPrefExpanded, setIsDisplayPrefExpanded] = useState(false);
+  const [form, setForm] = useState({
+    emailNotifications: true,
+    pushNotifications: false,
+  });
+  const [selectedState, setSelectedState] = useState<string>("Lagos");
+  const [isContactOptionsVisible, setContactOptionsVisible] = useState(false);
 
-  // Animated value for the slide-out effect
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  // Updated animation ref
+  const contactOptionsHeight = useRef(new Animated.Value(0)).current;
+
+  const toggleContactOptions = () => {
+    if (isContactOptionsVisible) {
+      Animated.timing(contactOptionsHeight, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false, // Layout animation, keep this false
+      }).start(() => setContactOptionsVisible(false));
+    } else {
+      setContactOptionsVisible(true);
+      Animated.timing(contactOptionsHeight, {
+        toValue: 120, // Adjust height as needed
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
+  const sendEmail = (email: string, subject: string, body: string) => {
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    Linking.openURL(mailtoUrl).catch((err) => {
+      console.error("Failed to open email client:", err);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open the email client.",
+      });
+    });
+  };
+  const reportBug = (email: string, subject: string, body: string) => {
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    Linking.openURL(mailtoUrl).catch((err) => {
+      console.error("Failed to open email client:", err);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open the email client.",
+      });
+    });
+  };
+
+  const navigateToContactOption = (screenName: string) => {
+    navigation.navigate(screenName, { presentation: "modal" });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.multiRemove(["userToken", "userName"]);
+      Toast.show({
+        type: "success",
+        text1: "Logged Out",
+        text2: "You have successfully logged out.",
+      });
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+      }, 3000);
+    } catch (error) {
+      console.error("Error during logout:", error);
+      Toast.show({
+        type: "error",
+        text1: "Logout Failed",
+        text2: "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchUserName = async () => {
       try {
         const name = await AsyncStorage.getItem("userName");
-        if (name) {
-          setUserName(name);
-        }
+        if (name) setUserName(name);
       } catch (error) {
         console.log("Error fetching user name: ", error);
       }
     };
-
     fetchUserName();
   }, []);
 
@@ -50,11 +136,7 @@ const ProfileScreen = () => {
       if (token) {
         const response = await axios.get(
           "https://lagosnawa.com/wp-json/wp/v2/users/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setUserData(response.data);
       } else {
@@ -71,310 +153,307 @@ const ProfileScreen = () => {
     fetchUserData();
   }, []);
 
-  const toggleNotification = async () => {
-    setIsNotificationEnabled((prevState) => !prevState);
-    try {
-      await AsyncStorage.setItem(
-        "notificationsEnabled",
-        JSON.stringify(!isNotificationEnabled)
-      );
-    } catch (error) {
-      console.log("Error saving notification preference:", error);
-    }
-  };
-
-  const toggleDarkMode = () => {
-    Toast.show({
-      type: "info",
-      text1: "Coming Soon",
-      text2: "Dark mode feature is under development.",
-    });
-  };
-
-  const toggleDisplayPreference = () => {
-    // Toggle the expansion state
-    setIsDisplayPrefExpanded((prevState) => !prevState);
-
-    // Animate the slide effect
-    Animated.timing(slideAnim, {
-      toValue: isDisplayPrefExpanded ? 0 : 1, // Slide in when expanded, slide out when collapsed
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.multiRemove(["userToken", "userName"]); // Removes both keys together
-
-      const token = await AsyncStorage.getItem("userToken");
-      const name = await AsyncStorage.getItem("userName");
-
-      console.log("Token after logout:", token); // Should be null
-      console.log("Username after logout:", name); // Should be null
-
-      Toast.show({
-        type: "success",
-        text1: "Logged Out",
-        text2: "You have successfully logged out.",
-      });
-      // Wait for 3 seconds before navigating to the login screen
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Login" }], // Ensure "Login" is the correct screen name
-        });
-      }, 3000); // 3000 milliseconds = 3 seconds
-      // Navigate back to the login screen
-    } catch (error) {
-      console.error("Error during logout:", error);
-      Toast.show({
-        type: "error",
-        text1: "Logout Failed",
-        text2: "Something went wrong. Please try again.",
-      });
-    }
-  };
-
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.9,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const displayPrefHeight = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 70], // Adjust height for smooth sliding
-  });
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-        <MaterialIcons name="logout" size={30} color="#fff" />
-      </TouchableOpacity>
-      {/* User Info Section */}
-      {userData && (
-        <View style={styles.userInfoSection}>
-          <Image
-            source={{
-              uri:
-                userData.avatar_urls?.[96] || "https://via.placeholder.com/100",
-            }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.userName}>{userData.name || "User"}</Text>
-          <Text style={styles.userRole}>@ {userName}</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("EditProfile")}
-            style={styles.editButton}
-          >
-            <MaterialIcons name="edit" size={20} color="#4a90e2" />
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Settings</Text>
+      </View>
 
-      <ScrollView>
-        {/* Add Topic Section */}
-        <View style={styles.addTopicSection}>
-          <Text style={styles.addTopicText}>
-            Hey, Want to add a post? Fill this form out to reach out to
-            LagosNawa.
-          </Text>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("AddPost", { screenType: "modal" })
-            } // Navigate to AddPost with modal effect
-            style={styles.addTopicButton}
-          >
-            <Text style={styles.addTopicButtonText}>+ Add Post</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Account Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Account settings</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("EditProfile")}
-            style={styles.itemBtn}
-          >
-            <Text style={styles.itemBtnText}>Edit profile</Text>
-            <MaterialIcons name="arrow-forward-ios" size={20} color="black" />
-          </TouchableOpacity>
-        </View>
-
-        {/* App Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>App settings</Text>
-
-          {/* Display preference */}
-          <TouchableOpacity
-            style={styles.itemBtn}
-            onPress={toggleDisplayPreference}
-          >
-            <Text style={styles.itemBtnText}>Display preference</Text>
-            <MaterialIcons
-              name={isDisplayPrefExpanded ? "expand-less" : "expand-more"}
-              size={20}
-              color="black"
-            />
-          </TouchableOpacity>
-
-          {/* Sliding dark mode toggle */}
-          <Animated.View
-            style={[styles.slideContainer, { height: displayPrefHeight }]}
-          >
-            <TouchableOpacity style={styles.itemBtn} onPress={toggleDarkMode}>
-              <Text style={styles.itemBtnText}>Dark Mode</Text>
-              <MaterialIcons name="dark-mode" size={20} color="black" />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={[styles.section, { paddingTop: 4 }]}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.sectionBody}>
+            <TouchableOpacity style={styles.profile}>
+              <Image
+                source={{
+                  uri:
+                    profilePicture ||
+                    "https://lagosnawa.com/wp-content/themes/gorgo/assets/images/avatars/user-avatar.png",
+                }}
+                style={styles.profileAvatar}
+              />
+              <View style={styles.profileBody}>
+                <Text style={styles.profileName}>
+                  {userData?.name || "User"}
+                </Text>
+                <Text style={styles.profileHandle}>@{userName}</Text>
+              </View>
+              <FeatherIcon
+                onPress={() => navigation.navigate("EditProfile")}
+                color="#bcbcbc"
+                name="edit"
+                size={22}
+              />
             </TouchableOpacity>
-          </Animated.View>
-
-          {/* Notifications */}
-          <View style={styles.itemBtn}>
-            <Text style={styles.itemBtnText}>Notification</Text>
-            <Switch
-              value={isNotificationEnabled}
-              onValueChange={toggleNotification}
-            />
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <View style={styles.sectionBody}>
+            <View style={styles.rowWrapper}></View>
+            <View style={styles.rowWrapper}>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Email Notifications</Text>
+                <Switch
+                  value={form.emailNotifications}
+                  onValueChange={(emailNotifications) =>
+                    setForm({ ...form, emailNotifications })
+                  }
+                />
+              </View>
+            </View>
+            <View style={styles.rowWrapper}>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Push Notifications</Text>
+                <Switch
+                  value={form.pushNotifications}
+                  onValueChange={(pushNotifications) =>
+                    setForm({ ...form, pushNotifications })
+                  }
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Resources</Text>
+          <View style={styles.sectionBody}>
+            <View style={styles.rowWrapper}>
+              <TouchableOpacity
+                style={styles.row}
+                onPress={toggleContactOptions}
+              >
+                <Text style={styles.rowLabel}>Contact Us</Text>
+                <FeatherIcon
+                  color="#bcbcbc"
+                  name={isContactOptionsVisible ? "chevron-up" : "chevron-down"}
+                  size={19}
+                />
+              </TouchableOpacity>
+
+              <Animated.View
+                style={[
+                  styles.contactOptions,
+                  { height: contactOptionsHeight },
+                ]}
+              >
+                <TouchableOpacity
+                  style={styles.contactOption}
+                  onPress={() =>
+                    sendEmail(
+                      "admin@lagosnawa.com",
+                      "Customer Support Inquiry",
+                      "Hello, I need help with..."
+                    )
+                  }
+                >
+                  <Text style={styles.contactOptionText}>Via Email</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.contactOption}
+                  onPress={() => navigateToContactOption("EmailScreen")}
+                >
+                  <Text style={styles.contactOptionText}>Fill Form</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.contactOption}
+                  onPress={() => openWebsite("https://lagosnawa.com")}
+                >
+                  <Text style={styles.contactOptionText}>Visit Website</Text>
+                </TouchableOpacity>
+              </Animated.View>
+              <TouchableOpacity
+                onPress={() =>
+                  reportBug(
+                    "admin@lagosnawa.com",
+                    "Bug Report",
+                    "Hello, I would love to report this bug..."
+                  )
+                }
+                style={styles.row}
+              >
+                <Text style={styles.rowLabel}>Report Bug</Text>
+                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  openWebsite("https://lagosnawa.com/privacy-policy-3/")
+                }
+                style={styles.row}
+              >
+                <Text style={styles.rowLabel}>Terms and Privacy</Text>
+                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionBody}>
+            <TouchableOpacity onPress={handleLogout} style={styles.row}>
+              <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
+                Log Out
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={styles.contentFooter}>App Version v1.0</Text>
       </ScrollView>
-      <Toast />
     </SafeAreaView>
   );
-};
-
-export default ProfileScreen;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
+  /** Header */
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 16,
+    marginVertical: 20,
   },
-  logoutButton: {
-    position: "absolute",
-    top: 50,
-    right: 20,
+  headerAction: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.6)", // Semi-transparent for the chrome feel
+    alignItems: "flex-start",
     justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-    backdropFilter: "blur(10px)", // Chromium style blur effect
-    transition: "background-color 0.3s ease", // Smooth transition effect
   },
-
-  userInfoSection: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  userRole: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  editButtonText: {
-    fontSize: 16,
-    color: "#4a90e2",
-    marginLeft: 5,
-  },
-  addTopicSection: {
-    backgroundColor: "#ffe5d1",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  addTopicText: {
-    fontSize: 16,
-    color: "#333",
-    marginBottom: 10,
+  headerTitle: {
+    fontSize: 19,
+    fontWeight: "600",
+    color: "#000",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
     textAlign: "center",
   },
-  addTopicButton: {
-    backgroundColor: "#a90d0d",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+  /** Content */
+  content: {
+    paddingHorizontal: 16,
   },
-  addTopicButtonText: {
-    color: "#fff",
-    fontSize: 16,
+  contentFooter: {
+    marginTop: -24,
+    fontSize: 13,
+    fontWeight: "500",
+    textAlign: "center",
+    color: "#a69f9f",
   },
+  /** Section */
   section: {
-    marginBottom: 20,
+    paddingVertical: 12,
   },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+  sectionTitle: {
+    margin: 8,
+    marginLeft: 12,
+    fontSize: 13,
+    letterSpacing: 0.33,
+    fontWeight: "500",
+    color: "#a69f9f",
+    textTransform: "uppercase",
   },
-  itemBtn: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    backgroundColor: "#f9f9f9",
-  },
-  itemBtnText: {
-    fontSize: 18,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  slideContainer: {
+  contactOptions: {
+    backgroundColor: "#fff",
     overflow: "hidden",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    marginBottom: 10,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  contactOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  contactOptionText: {
+    fontSize: 16,
+    color: "#007aff",
+  },
+  sectionBody: {
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  /** Profile */
+  profile: {
+    padding: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  profileAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 9999,
+    marginRight: 12,
+  },
+  profileBody: {
+    marginRight: "auto",
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#292929",
+  },
+  profileHandle: {
+    marginTop: 2,
+    fontSize: 16,
+    fontWeight: "400",
+    color: "#858585",
+  },
+  /** Row */
+  row: {
+    height: 44,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: 12,
+  },
+  rowWrapper: {
+    paddingLeft: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  rowFirst: {
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  rowLabel: {
+    fontSize: 16,
+    letterSpacing: 0.24,
+    color: "#000",
+  },
+  rowSpacer: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+  },
+  rowValue: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#ababab",
+    marginRight: 4,
+  },
+  rowLast: {
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  rowLabelLogout: {
+    width: "100%",
+    textAlign: "center",
+    fontWeight: "600",
+    color: "#dc2626",
+    marginTop: -32,
   },
 });

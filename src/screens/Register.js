@@ -11,7 +11,7 @@ import {
   SafeAreaView,
 } from "react-native"; // Notice Platform is imported hereimport { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
-import Toast from "react-native-toast-message";
+import Toast, { BaseToast } from "react-native-toast-message";
 import Font from "../constants/Font";
 import FontSize from "../constants/FontSize";
 import { theme } from "../constants/theme";
@@ -47,6 +47,29 @@ const validatePasswordStrength = (password) => {
     hasNumber &&
     hasSpecialChar
   );
+};
+// Custom toast configuration
+const customToastConfig = {
+  error: (props) => (
+    <TouchableOpacity
+      onPress={() => alert(props.text2)} // Show full message on click
+      style={{
+        backgroundColor: "#fff",
+        borderLeftColor: "#a8080d",
+        borderLeftWidth: 5,
+        padding: 10,
+        borderRadius: 5,
+        marginHorizontal: 10,
+        marginVertical: 20,
+        elevation: 3,
+      }}
+    >
+      <Text style={{ fontWeight: "bold", fontSize: 16, color: "#721C24" }}>
+        {props.text1}
+      </Text>
+      <Text style={{ fontSize: 14, color: "#721C24" }}>{props.text2}</Text>
+    </TouchableOpacity>
+  ),
 };
 
 const Register = ({ navigation }) => {
@@ -140,7 +163,7 @@ const Register = ({ navigation }) => {
 
         // Navigate to the login screen after 5 seconds
         setTimeout(() => {
-          navigation.navigate("Tabs");
+          navigation.navigate("Login");
         }, 3000);
       } else {
         showToast("Registration failed, please try again.");
@@ -155,7 +178,7 @@ const Register = ({ navigation }) => {
       setLoading(false);
     }
   };
-return(
+  return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
@@ -250,13 +273,13 @@ return(
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate("Login")}>
               <Text style={styles.switch}>
-                Already have an Account?{" "}
+                Already have an Account?
                 <Text style={{ fontWeight: 800 }}>Sign In</Text>
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-        <Toast />
+        <Toast config={customToastConfig} />
       </SafeAreaView>
     </KeyboardAvoidingView>
   );

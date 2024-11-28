@@ -18,32 +18,43 @@ import Search from "./components/Search";
 import AddPostScreen from "./components/AddPost";
 import EditProfileScreen from "./components/EditProfile";
 import ForgotPassword from "./src/screens/Forgot";
+import EmailScreen from "./components/EmailScreen";
+import DiscoverSearch from "./components/DiscoverSearch";
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
+  const [initialRoute, setInitialRoute] = useState(null);
 
   useEffect(() => {
-    const checkFirstLaunch = async () => {
+    const checkAppState = async () => {
       try {
         const hasSeenSplash = await AsyncStorage.getItem("hasSeenSplash");
+        const userToken = await AsyncStorage.getItem("userToken");
+
+        console.log("hasSeenSplash:", hasSeenSplash);
+        console.log("userToken:", userToken);
 
         if (hasSeenSplash === null) {
-          setIsFirstLaunch(true);
-          await AsyncStorage.setItem("hasSeenSplash", "true"); // Set flag to avoid showing splash again
+          // First launch, navigate to Splash
+          await AsyncStorage.setItem("hasSeenSplash", "true");
+          setInitialRoute("Splash");
+        } else if (userToken) {
+          // User is logged in, navigate to Tabs
+          setInitialRoute("Tabs");
         } else {
-          setIsFirstLaunch(false);
+          // User is not logged in, navigate to Login
+          setInitialRoute("Login");
         }
       } catch (error) {
-        console.error("Failed to load splash screen preference:", error);
+        console.error("Error checking app state:", error);
       }
     };
 
-    checkFirstLaunch();
+    checkAppState();
   }, []);
 
-  if (isFirstLaunch === null) {
+  if (initialRoute === null) {
     // Show a loading screen while checking AsyncStorage
     return null;
   }
@@ -51,14 +62,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName={isFirstLaunch ? "Splash" : "Tabs"}>
-          {isFirstLaunch && (
-            <Stack.Screen
-              options={{ headerShown: false }}
-              name="Splash"
-              component={SplashScreen}
-            />
-          )}
+        <Stack.Navigator initialRouteName={initialRoute}>
+          <Stack.Screen
+            options={{ headerShown: false }}
+            name="Splash"
+            component={SplashScreen}
+          />
           <Stack.Screen name="Onboarding" component={Onboarding} />
           <Stack.Screen
             options={{ headerShown: false }}
@@ -99,9 +108,27 @@ export default function App() {
             options={{ headerBackTitleVisible: false }}
           />
           <Stack.Screen
+            name="Discover Search"
+            component={DiscoverSearch}
+            options={{
+              headerTitleVisible: false,
+              headerBackTitleVisible: false,
+              headerTitle: "",
+            }}
+          />
+          <Stack.Screen
             name="EditProfile"
             component={EditProfileScreen}
             options={{ headerBackTitleVisible: false }}
+          />
+          <Stack.Screen
+            name="EmailScreen"
+            component={EmailScreen}
+            options={{
+              header: () => null, // Hides the default header
+              presentation: "modal", // Ensures the screen shows as a modal
+              headerShown: false, // Hides the default header for a clean modal look
+            }}
           />
           <Stack.Screen
             name="Forgot"

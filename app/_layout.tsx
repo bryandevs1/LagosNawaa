@@ -56,8 +56,9 @@ const styles = StyleSheet.create({
   tabBar: {
     position: "absolute", // Make tab bar float
     backgroundColor: "rgb(255, 255, 255)", // Glassy effect
+    paddingTop: 25,
     borderRadius: 30, // Rounded corners
-    height: 70, // Increased height of the tab bar to ensure full icon visibility
+    height: 90, // Increased height of the tab bar to ensure full icon visibility
     borderWidth: 1, // Border for glassy effect
     borderColor: "rgba(255, 255, 255, 0.3)", // Light glassy border
     shadowColor: "#000", // Shadow color (iOS)

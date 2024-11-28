@@ -1,4 +1,13 @@
-import { StyleSheet, Text, View, Button, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
@@ -107,8 +116,10 @@ const Page = (props: Props) => {
 
       // Navigate to Search results if data is found
       if (response && response.data) {
-        navigation.navigate("SearchResults", {
-          searchResults: response.data, // Pass the search results
+        navigation.navigate("Discover Search", {
+          searchResults: [], // Initial empty results
+          searchQuery, // Pass search query
+          selectedCategories, // Pass selected categories
         });
       } else {
         Alert.alert("No Results", "No data found.");
@@ -122,64 +133,75 @@ const Page = (props: Props) => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: safeTop + 20 }]}>
-      {/* Search Bar */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={(text) => setSearchQuery(text)}
-      />
-
-      {/* Custom Categories Section */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={styles.text}>Explore Categories</Text>
-        <View style={styles.gridContainer}>
-          {categories.length > 0 ? (
-            categories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={[
-                  styles.categoryItem,
-                  isCategorySelected(category.id) && styles.categoryItemActive,
-                ]}
-                onPress={() => handleSelectCategory(category.id)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    isCategorySelected(category.id) &&
-                      styles.categoryTextActive,
-                  ]}
-                >
-                  {category.name}
-                </Text>
-                {isCategorySelected(category.id) && (
-                  <MaterialIcons
-                    name="check-circle"
-                    size={20}
-                    color="green"
-                    style={styles.greenTick}
-                  />
-                )}
-              </TouchableOpacity>
-            ))
-          ) : (
-            <Text>Loading categories...</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Search Button */}
-      <View style={styles.searchButtonContainer}>
-        <Button
-          title="Search"
-          onPress={() => {
-            console.log("Search Button Pressed");
-            handleSearch(); // Trigger search
-          }}
-          disabled={!searchQuery && selectedCategories.length === 0}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: safeTop + 20,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {" "}
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
         />
-      </View>
-    </View>
+        {/* Custom Categories Section */}
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.text}>Explore Categories</Text>
+          <View style={styles.gridContainer}>
+            {categories.length > 0 ? (
+              categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryItem,
+                    isCategorySelected(category.id) &&
+                      styles.categoryItemActive,
+                  ]}
+                  onPress={() => handleSelectCategory(category.id)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      isCategorySelected(category.id) &&
+                        styles.categoryTextActive,
+                    ]}
+                  >
+                    {category.name}
+                  </Text>
+                  {isCategorySelected(category.id) && (
+                    <MaterialIcons
+                      name="check-circle"
+                      size={20}
+                      color="green"
+                      style={styles.greenTick}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text>Loading categories...</Text>
+            )}
+          </View>
+        </View>
+        {/* Search Button */}
+        <View style={styles.searchButtonContainer}>
+          <Button
+            title="Search"
+            onPress={() => {
+              console.log("Search Button Pressed");
+              handleSearch(); // Trigger search
+            }}
+            disabled={!searchQuery && selectedCategories.length === 0}
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

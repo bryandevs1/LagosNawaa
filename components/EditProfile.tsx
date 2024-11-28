@@ -63,7 +63,7 @@ const EditProfileScreen = () => {
         // Use Toast for success message
         type: "success",
         text1: "Success",
-        text2: "Profile updated!",
+        text2: "Profile updated! Name will be updated after next sucessful login",
         position: "top",
         visibilityTime: 4000,
       });

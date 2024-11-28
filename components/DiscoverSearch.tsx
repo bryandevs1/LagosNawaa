@@ -1,21 +1,29 @@
-import { StyleSheet, Text, View, Image, FlatList, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useState } from "react";
-import { decode } from "html-entities"; // Use only `decode`
+import { decode } from "html-entities"; // Decode HTML entities in text
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Ensure AsyncStorage is imported
 import axios from "axios";
 
-const Search = ({ route }: { route: any }) => {
+const DiscoverSearch = ({ route }: { route: any }) => {
   const searchResults = route?.params?.searchResults || [];
   const navigation = useNavigation();
-  const { searchQuery } = route.params || {};
+
+  const { searchQuery, selectedCategories } = route.params || {};
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false); // State to track loading
 
   useEffect(() => {
     const fetchSearchResults = async () => {
-      setLoading(true); // Set loading to true before fetching
+      setLoading(true); // Show loader while fetching
       try {
         const token = await AsyncStorage.getItem("userToken");
 
@@ -25,29 +33,43 @@ const Search = ({ route }: { route: any }) => {
           return;
         }
 
-        const queryParam = searchQuery ? `&search=${searchQuery}` : "";
-        const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?_embed${queryParam}`;
+        // Base URL for posts
+        const baseURL = "https://lagosnawa.com/wp-json/wp/v2/posts?_embed";
 
+        // Include the search query if provided
+        const queryParam = searchQuery ? `&search=${searchQuery}` : "";
+
+        // Include the selected categories if any
+        const categoryParam = selectedCategories.length
+          ? `&categories=${selectedCategories.join(",")}`
+          : "";
+
+        // Construct the full URL
+        const URL = `${baseURL}${queryParam}${categoryParam}`;
+
+        console.log("Fetching URL:", URL);
+
+        // Make the API call
         const response = await axios.get(URL, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
+        // Set the fetched results in state
         const fetchedResults = response.data || [];
         setResults(fetchedResults);
         console.log("Fetched results:", fetchedResults);
       } catch (err) {
         console.log("Error fetching search results:", err.message);
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false); // Stop the loader
       }
     };
 
-    if (searchQuery) {
-      fetchSearchResults();
-    }
-  }, [searchQuery]);
+    // Fetch results when component mounts or when searchQuery/selectedCategories changes
+    fetchSearchResults();
+  }, [searchQuery, selectedCategories]);
 
   const handlePress = (item: any) => {
     navigation.navigate("NewsDetail", {
@@ -92,7 +114,6 @@ const Search = ({ route }: { route: any }) => {
   return (
     <View style={styles.container}>
       {loading ? (
-        // Show a loading spinner while fetching results
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
       ) : results.length > 0 ? (
         <FlatList
@@ -102,14 +123,16 @@ const Search = ({ route }: { route: any }) => {
         />
       ) : (
         <Text style={styles.noResultsText}>
-          {searchQuery ? "No results found." : "Enter a search query."}
+          {searchQuery || selectedCategories.length > 0
+            ? "No results found."
+            : "Enter a search query or select categories."}
         </Text>
       )}
     </View>
   );
 };
 
-export default Search;
+export default DiscoverSearch;
 
 const styles = StyleSheet.create({
   container: {

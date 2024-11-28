@@ -40,9 +40,10 @@ const ForgotPassword = ({ navigation }) => {
     try {
       const response = await axios.post(
         "https://lagosnawa.com/wp-json/custom/v1/lostpassword",
-        { user_login: email } // Change "email" to "user_login"
+        { user_login: email }
       );
 
+      // Check if response.data is a string and contains the success message
       if (
         typeof response.data === "string" &&
         response.data.includes("Password reset email sent")
@@ -51,15 +52,16 @@ const ForgotPassword = ({ navigation }) => {
           "success",
           "Password reset link sent. Please check your email."
         );
-        const delayInMilliseconds = 3000; // Adjust delay as needed (3 seconds in this example)
-        setTimeout(() => {
-          navigation.navigate("Login");
-        }, delayInMilliseconds);
+        navigation.navigate("Login");
       } else {
         showToast("error", "Unable to send reset link. Please try again.");
       }
     } catch (error) {
       showToast("error", "Network error, please try again.");
+      console.log(
+        "Error:",
+        error.response ? error.response.data : error.message
+      );
     } finally {
       setLoading(false);
     }

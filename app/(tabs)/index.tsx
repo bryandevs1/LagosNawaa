@@ -19,6 +19,8 @@ import NewsList from "../../components/NewsList";
 import { ScrollView } from "react-native-gesture-handler";
 import { decode } from "html-entities";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { TouchableOpacity, Pressable } from "react-native"; // Add import if not already present
+import { Ionicons } from "@expo/vector-icons";
 
 const Page = () => {
   const { top: safeTop } = useSafeAreaInsets();
@@ -135,18 +137,40 @@ const Page = () => {
   };
   const navigation = useNavigation();
 
-  const handleSearch = () => {
-    navigation.navigate("Discover", { searchQuery });
-  };
+const handleSearch = () => {
+  if (searchQuery.trim()) {
+    navigation.navigate("Search results", { searchQuery }); // Pass the query to the SearchResults screen
+  } else {
+    console.log("Search query is empty.");
+  }
+};
 
   return (
     <View style={[styles.container, { paddingTop: safeTop }]}>
       <Header />
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        onSearch={handleSearch} // Trigger navigation to Discover
-      />
+      <TouchableOpacity style={styles.searchBar} activeOpacity={1}>
+        <Ionicons name="search-outline" size={24} color="black" />
+        <TextInput
+          style={styles.input}
+          placeholder="Search"
+          value={searchQuery} // Use searchQuery state
+          onChangeText={(text) => setSearchQuery(text)} // Update searchQuery
+          placeholderTextColor="#999"
+          returnKeyType="search"
+          autoCorrect={false}
+          blurOnSubmit
+        />
+        <Pressable
+          style={styles.searchButton}
+          onPress={handleSearch} // Trigger search
+        >
+          <Ionicons
+            name="arrow-forward-circle-outline"
+            size={24}
+            color="#a80d0d"
+          />
+        </Pressable>
+      </TouchableOpacity>
       <ScrollView ref={scrollRef} stickyHeaderIndices={[1]}>
         <BreakingNews newsList={breakingNews} />
         <View style={styles.stickyCategoriesContainer}>
@@ -178,5 +202,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    margin: 10,
+    backgroundColor: "#f9f9f9",
+  },
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
+  },
+  searchButton: {
+    marginLeft: 10,
+    padding: 5,
   },
 });
