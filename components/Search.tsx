@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, Image, FlatList, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { decode } from "html-entities"; // Use only `decode`
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -80,7 +87,7 @@ const Search = ({ route }: { route: any }) => {
           />
           <View style={styles.textContainer}>
             <Text style={styles.resultTitle}>
-              {decode(item.title.rendered)}
+              {String(decode(item.title.rendered))}
             </Text>
             <Text style={styles.resultCategory}>{category}</Text>
           </View>

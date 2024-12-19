@@ -68,6 +68,22 @@ const Login = ({ navigation }) => {
         await AsyncStorage.setItem("userName", user_nicename);
         await AsyncStorage.setItem("userEmail", user_email);
 
+        // Check if TOS has been viewed
+        const hasViewedTOS = await AsyncStorage.getItem("hasViewedTOS");
+
+        if (!hasViewedTOS) {
+          // Navigate to the TOS modal screen
+          navigation.navigate("Terms", {
+            onAccept: async () => {
+              await AsyncStorage.setItem("hasViewedTOS", "true");
+              navigation.replace("Tabs"); // Go to the home/index screen
+            },
+          });
+        } else {
+          // Navigate directly to the home screen
+          navigation.replace("Tabs");
+        }
+
         // Fetch the user's profile to get the avatar URL
         const userProfileResponse = await axios.get(
           `https://lagosnawa.com/wp-json/wp/v2/users/me`,
@@ -78,30 +94,20 @@ const Login = ({ navigation }) => {
           }
         );
 
-        // Save the profile image if it exists
-        const profileImage = userProfileResponse.data.avatar_urls?.[96] || null; // The avatar URL is typically available in different sizes
+        const profileImage = userProfileResponse.data.avatar_urls?.[96] || null;
         if (profileImage) {
           await AsyncStorage.setItem("userProfileImage", profileImage);
         }
 
-        // Show success toast and navigate to the next screen
-        Toast.show({
-          type: "success",
-          text1: "Login Successful",
-          text2: "Welcome back!",
-        });
-
-        navigation.navigate("Tabs"); // Navigate to your home route
+        showToast("success", "Login Successful");
       } else {
         showToast("error", "Invalid login response. Please try again.");
       }
     } catch (error) {
       if (error.response) {
-        // Handle server errors (status code 400 or 500)
         const errorMessage = error.response.data.message || "Login failed";
         showToast("error", errorMessage);
       } else {
-        // Handle network or other errors
         showToast("error", "Network error, please try again.");
       }
     } finally {

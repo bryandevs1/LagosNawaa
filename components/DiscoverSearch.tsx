@@ -5,12 +5,13 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { decode } from "html-entities"; // Decode HTML entities in text
+import { decode } from "html-entities";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Ensure AsyncStorage is imported
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const DiscoverSearch = ({ route }: { route: any }) => {
@@ -19,55 +20,39 @@ const DiscoverSearch = ({ route }: { route: any }) => {
 
   const { searchQuery, selectedCategories } = route.params || {};
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false); // State to track loading
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchSearchResults = async () => {
-      setLoading(true); // Show loader while fetching
+      setLoading(true);
       try {
         const token = await AsyncStorage.getItem("userToken");
-
         if (!token) {
           console.log("No token found, please log in.");
           setLoading(false);
           return;
         }
 
-        // Base URL for posts
         const baseURL = "https://lagosnawa.com/wp-json/wp/v2/posts?_embed";
-
-        // Include the search query if provided
         const queryParam = searchQuery ? `&search=${searchQuery}` : "";
-
-        // Include the selected categories if any
         const categoryParam = selectedCategories.length
           ? `&categories=${selectedCategories.join(",")}`
           : "";
-
-        // Construct the full URL
         const URL = `${baseURL}${queryParam}${categoryParam}`;
 
         console.log("Fetching URL:", URL);
-
-        // Make the API call
         const response = await axios.get(URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Set the fetched results in state
-        const fetchedResults = response.data || [];
-        setResults(fetchedResults);
-        console.log("Fetched results:", fetchedResults);
+        setResults(response.data || []);
       } catch (err) {
         console.log("Error fetching search results:", err.message);
       } finally {
-        setLoading(false); // Stop the loader
+        setLoading(false);
       }
     };
 
-    // Fetch results when component mounts or when searchQuery/selectedCategories changes
     fetchSearchResults();
   }, [searchQuery, selectedCategories]);
 
@@ -88,7 +73,6 @@ const DiscoverSearch = ({ route }: { route: any }) => {
     const imageUrl =
       item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
       "https://via.placeholder.com/150";
-
     const category =
       item._embedded?.["wp:term"]?.[0]?.[0]?.name || "Uncategorized";
 
@@ -102,9 +86,11 @@ const DiscoverSearch = ({ route }: { route: any }) => {
           />
           <View style={styles.textContainer}>
             <Text style={styles.resultTitle}>
-              {decode(item.title.rendered)}
+              {decode(item.title?.rendered || "")}
             </Text>
-            <Text style={styles.resultCategory}>{category}</Text>
+            <Text style={styles.resultCategory}>
+              {category || "Uncategorized"}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>

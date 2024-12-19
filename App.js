@@ -20,6 +20,7 @@ import EditProfileScreen from "./components/EditProfile";
 import ForgotPassword from "./src/screens/Forgot";
 import EmailScreen from "./components/EmailScreen";
 import DiscoverSearch from "./components/DiscoverSearch";
+import TermsOfService from "./components/Terms";
 
 const Stack = createStackNavigator();
 
@@ -142,6 +143,15 @@ export default function App() {
           <Stack.Screen
             name="AddPost"
             component={AddPostScreen}
+            options={{
+              presentation: "transparentModal",
+              headerShown: false,
+              cardStyle: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+            }}
+          />
+          <Stack.Screen
+            name="Terms"
+            component={TermsOfService}
             options={{
               presentation: "transparentModal",
               headerShown: false,
