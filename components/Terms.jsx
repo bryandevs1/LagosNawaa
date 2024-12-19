@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import { CheckBox } from "react-native-elements"; // Install: npm install react-native-elements
 
@@ -18,11 +19,11 @@ const TermsOfService = ({ navigation }) => {
       return;
     }
     // Save user's acceptance status (e.g., AsyncStorage or backend)
-    navigation.replace("Home"); // Navigate to the main screen
+    navigation.replace("Tabs"); // Navigate to the main screen
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Terms of Service</Text>
       <ScrollView style={styles.scrollView}>
         <Text style={styles.termsText}>
@@ -61,7 +62,7 @@ const TermsOfService = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handleAccept}>
         <Text style={styles.buttonText}>Accept and Continue</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -80,6 +81,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     marginBottom: 10,
+    paddingHorizontal: 20,
   },
   termsText: {
     fontSize: 16,

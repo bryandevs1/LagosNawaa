@@ -21,6 +21,7 @@ import ForgotPassword from "./src/screens/Forgot";
 import EmailScreen from "./components/EmailScreen";
 import DiscoverSearch from "./components/DiscoverSearch";
 import TermsOfService from "./components/Terms";
+import DeleteScreen from "./components/Delete";
 
 const Stack = createStackNavigator();
 
@@ -143,6 +144,15 @@ export default function App() {
           <Stack.Screen
             name="AddPost"
             component={AddPostScreen}
+            options={{
+              presentation: "transparentModal",
+              headerShown: false,
+              cardStyle: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+            }}
+          />
+          <Stack.Screen
+            name="Delete"
+            component={DeleteScreen}
             options={{
               presentation: "transparentModal",
               headerShown: false,

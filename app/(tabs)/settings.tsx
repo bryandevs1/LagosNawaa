@@ -287,6 +287,13 @@ export default function ProfileScreen() {
                 <Text style={styles.rowLabel}>Terms and Privacy</Text>
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Delete")}
+                style={styles.row}
+              >
+                <Text style={styles.rowLabel}>Delete my account</Text>
+                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
