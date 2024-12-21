@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,8 @@ import {
   Alert,
   FlatList,
   TextInput,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import RenderHtml from "react-native-render-html";
@@ -16,6 +18,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import StyledButton from "../../components/StyledButton";
 import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingView";
 import immagee from "./icon.png";
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
 
 const { width } = Dimensions.get("window");
 
@@ -29,6 +33,8 @@ const NewsDetails = ({ navigation }) => {
   const [isPosting, setIsPosting] = useState(false);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [reportReason, setReportReason] = useState("");
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
   // Fetch user data from AsyncStorage and comments when the component mounts
   useEffect(() => {
@@ -44,6 +50,36 @@ const NewsDetails = ({ navigation }) => {
     fetchUserData();
     fetchComments(); // Fetch comments for the post
   }, []);
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) {
+      Alert.alert("Error", "Please provide a reason for reporting.");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://backend.ikoyiproperty.com/report-news",
+        {
+          id: id,
+          title: title,
+          reason: reportReason,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      Alert.alert("Success", "Report sent successfully.");
+      setReportReason("");
+      setIsReportModalVisible(false);
+    } catch (error) {
+      console.error("Error sending report:", error);
+      Alert.alert("Error", "Failed to send report.");
+    }
+  };
 
   // Fetch comments for the post
   const fetchComments = async () => {
@@ -135,14 +171,32 @@ const NewsDetails = ({ navigation }) => {
 
         {/* Title */}
         <Text style={styles.title}>{title}</Text>
-
-        {/* Author Info and Date */}
-        <View style={styles.authorRow}>
-          <Image source={immagee} style={styles.authorImage} />
-          <View>
-            <Text style={styles.authorName}>Lagosnawa</Text>
-            <Text style={styles.date}>{formatDate(date)}</Text>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {/* Author Info and Date */}
+          <View style={styles.authorRow}>
+            <Image source={immagee} style={styles.authorImage} />
+            <View>
+              <Text style={styles.authorName}>Lagosnawa</Text>
+              <Text style={styles.date}>{formatDate(date)}</Text>
+            </View>
           </View>
+          {/* Author Name on the Far Right */}
+          <Text style={[styles.authorName, { marginLeft: "auto" }]}>
+            <TouchableOpacity onPress={() => setIsReportModalVisible(true)}>
+              <FontAwesome
+                name="exclamation-triangle"
+                size={24}
+                color="#a80d0d"
+              />
+            </TouchableOpacity>
+          </Text>
         </View>
 
         {/* Render HTML Content */}
@@ -176,6 +230,38 @@ const NewsDetails = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      {isReportModalVisible && (
+        <Modal
+          transparent
+          animationType="slide"
+          visible={isReportModalVisible}
+          onRequestClose={() => setIsReportModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Report Post</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter reason for reporting"
+                value={reportReason}
+                onChangeText={setReportReason}
+              />
+              <View style={styles.modalButtons}>
+                <StyledButton
+                  disabled={false}
+                  title="Submit"
+                  onPress={handleReport}
+                />
+                <StyledButton
+                  disabled={false}
+                  title="Cancel"
+                  onPress={() => setIsReportModalVisible(false)}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -208,6 +294,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  input: {
+    width: "100%",
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+
   authorImage: {
     width: 40,
     height: 40,
