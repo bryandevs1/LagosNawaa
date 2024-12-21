@@ -19,7 +19,7 @@ import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 type Props = {};
 
-const Page = (props: Props) => {
+const Discover = (props: Props) => {
   const navigation = useNavigation();
   const { top: safeTop } = useSafeAreaInsets();
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
@@ -44,7 +44,11 @@ const Page = (props: Props) => {
       });
 
       if (response?.data?.length) {
-        setCategories([{ id: 0, name: "All", slug: "all" }, ...response.data]);
+        // Filter out "All" category if it exists
+        const filteredCategories = response.data.filter(
+          (category) => category.slug !== "all"
+        );
+        setCategories(filteredCategories);
       } else {
         setCategories([]);
         Alert.alert("Error", "Failed to load categories. Try again later.");
@@ -141,11 +145,13 @@ const Page = (props: Props) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingVertical: 10 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingVertical: 60,
+          paddingBottom: 80,
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        {" "}
-        {/* Search Bar */}
         <SearchBar
           value={searchQuery}
           onChangeText={(text) => setSearchQuery(text)}
@@ -205,12 +211,13 @@ const Page = (props: Props) => {
   );
 };
 
-export default Page;
+export default Discover;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    marginTop: 50,
   },
   text: {
     fontSize: 18,
