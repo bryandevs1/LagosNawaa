@@ -7,12 +7,12 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import SearchBar from "../../components/SearchBar";
 import { MaterialIcons } from "@expo/vector-icons"; // For the green tick
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -31,7 +31,7 @@ const Page = (props: Props) => {
       const token = await AsyncStorage.getItem("userToken");
 
       if (!token) {
-        console.log("No token found, please log in.");
+        Alert.alert("Error", "You are not logged in. Please log in again.");
         return;
       }
 
@@ -43,8 +43,11 @@ const Page = (props: Props) => {
         },
       });
 
-      if (response && response.data) {
+      if (response?.data?.length) {
         setCategories([{ id: 0, name: "All", slug: "all" }, ...response.data]);
+      } else {
+        setCategories([]);
+        Alert.alert("Error", "Failed to load categories. Try again later.");
       }
     } catch (err: any) {
       console.log("Error Message: ", err.message);
@@ -138,10 +141,7 @@ const Page = (props: Props) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingTop: safeTop + 20,
-        }}
+        contentContainerStyle={{ flexGrow: 1, paddingVertical: 10 }}
         keyboardShouldPersistTaps="handled"
       >
         {" "}
