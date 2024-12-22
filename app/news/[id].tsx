@@ -59,7 +59,7 @@ const NewsDetails = ({ navigation }) => {
 
     try {
       await axios.post(
-        "http://backend.ikoyiproperty.com/report-news",
+        "https://back.ikoyiproperty.com:8443/report-news",
         {
           id: id,
           title: title,
