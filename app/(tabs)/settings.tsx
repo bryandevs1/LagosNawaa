@@ -266,6 +266,13 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </Animated.View>
               <TouchableOpacity
+                onPress={() => navigation.navigate("Report user")}
+                style={styles.row}
+              >
+                <Text style={styles.rowLabel}>Report User</Text>
+                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={() =>
                   reportBug(
                     "admin@lagosnawa.com",

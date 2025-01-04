@@ -22,6 +22,7 @@ import EmailScreen from "./components/EmailScreen";
 import DiscoverSearch from "./components/DiscoverSearch";
 import TermsOfService from "./components/Terms";
 import DeleteScreen from "./components/Delete";
+import UserScreen from "./components/ReportUser";
 
 const Stack = createStackNavigator();
 
@@ -153,6 +154,15 @@ export default function App() {
           <Stack.Screen
             name="Delete"
             component={DeleteScreen}
+            options={{
+              presentation: "transparentModal",
+              headerShown: false,
+              cardStyle: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+            }}
+          />
+          <Stack.Screen
+            name="Report user"
+            component={UserScreen}
             options={{
               presentation: "transparentModal",
               headerShown: false,
