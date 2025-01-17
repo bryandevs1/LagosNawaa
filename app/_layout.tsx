@@ -6,44 +6,52 @@ import Discover from "./(tabs)/discover";
 import Saved from "./(tabs)/saved";
 import { StyleSheet } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons"; // Import FontAwesome 6 icons
+import { RouteProp } from "@react-navigation/native";
 
-const Tab = createBottomTabNavigator();
+type TabParamList = {
+  Home: undefined;
+  Discover: undefined;
+  Saved: undefined;
+  Settings: undefined;
+};
 
+const Tab = createBottomTabNavigator<TabParamList>();
+const screenOptions = ({
+  route,
+}: {
+  route: RouteProp<TabParamList, keyof TabParamList>;
+}) => ({
+  tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => {
+    let iconName: string;
+
+    switch (route.name) {
+      case "Home":
+        iconName = "home";
+        break;
+      case "Discover":
+        iconName = "search";
+        break;
+      case "Saved":
+        iconName = "bookmark";
+        break;
+      case "Settings":
+        iconName = "cogs";
+        break;
+      default:
+        iconName = "circle"; // Fallback icon
+    }
+
+    return <FontAwesome5 name={iconName} size={20} color={color} />;
+  },
+  tabBarActiveTintColor: "#a80d0d",
+  tabBarInactiveTintColor: "#999",
+  tabBarStyle: styles.tabBar,
+  tabBarShowLabel: false,
+  headerShown: false,
+});
 export default function TabsNavigator() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          // Assign FontAwesome icons based on route name
-          if (route.name === "Home") {
-            iconName = "home";
-          } else if (route.name === "Discover") {
-            iconName = "search";
-          } else if (route.name === "Saved") {
-            iconName = "bookmark";
-          } else if (route.name === "Settings") {
-            iconName = "cogs";
-          }
-
-          // Return the FontAwesome icon component with custom size, color, and glow effect
-          return (
-            <FontAwesome5
-              name={iconName}
-              size={20}
-              color={color}
-              style={styles.icon}
-            />
-          );
-        },
-        tabBarActiveTintColor: "#a80d0d", // Color for active icons
-        tabBarInactiveTintColor: "#999", // Color for inactive icons
-        tabBarStyle: styles.tabBar, // Style for the floating tab bar
-        tabBarShowLabel: false, // Hide labels
-        headerShown: false, // Hide headers for all screens
-      })}
-    >
+    <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Discover" component={Discover} />
       <Tab.Screen name="Saved" component={Saved} />

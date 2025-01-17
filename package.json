@@ -1,6 +1,6 @@
 {
-  "name": "wealthnews",
-  "main": "expo-router/entry",
+  "name": "africanawa",
+  "main": "expo/AppEntry.js",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",

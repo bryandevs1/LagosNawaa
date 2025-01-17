@@ -37,7 +37,7 @@ const NewsList = ({ newsList }: Props) => {
           "https://via.placeholder.com/150";
         const title = item.title?.rendered || "No Title Available";
 
-        const authorName = item._embedded?.author?.[0]?.name || "LagosNawa";
+        const authorName = item._embedded?.author?.[0]?.name || "AfricaNawa";
         const authorImageUrl =
           item._embedded?.author?.[0]?.avatar_urls?.["96"] ||
           Image.resolveAssetSource(logo).uri;

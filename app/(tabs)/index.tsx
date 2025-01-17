@@ -88,7 +88,7 @@ const Page = () => {
 
       setLoading(true);
 
-      const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?per_page=10&page=${page}&_embed${categoryString}`;
+      const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?per_page=50&page=${page}&_embed${categoryString}`;
 
       const response = await axios.get(URL, {
         headers: {

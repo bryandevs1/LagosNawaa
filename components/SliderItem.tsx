@@ -76,7 +76,7 @@ const SliderItem = ({ slideItem, index, scrollX }: Props) => {
     const embeddedAuthor = slideItem._embedded?.author?.[0];
 
     if (embeddedAuthor) {
-      setAuthorName(embeddedAuthor.name || "LagosNawa");
+      setAuthorName(embeddedAuthor.name || "AfricaNawa");
       setAuthorImageUrl(
         embeddedAuthor.avatar_urls?.["96"] || Image.resolveAssetSource(logo).uri
       );
