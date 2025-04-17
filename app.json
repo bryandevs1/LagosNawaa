@@ -1,22 +1,38 @@
 {
   "expo": {
-    "name": "africanawa",
+    "name": "Africanawa",
     "slug": "africanawa",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/myicon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ojjiedu.africanawa"
+      "bundleIdentifier": "com.nexodus.africanawa",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "NSUserNotificationsUsageDescription": "This app uses notifications to keep you updated on important events."
+      },
+      "entitlements": {
+        "aps-environment": "production",
+        "com.apple.security.application-groups": [
+          "group.com.nexodus.africanawa.onesignal"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.nexodus.africanawa",
+      "permissions": ["READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
     },
     "web": {
       "bundler": "metro",
@@ -28,10 +44,27 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development",
+          "devTeam": "N3TP5ZBN4M"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff",
+          "androidMode": "default",
+          "androidCollapsedTitle": "New notification",
+          "sounds": ["./assets/notifs.wav"]
         }
       ]
     ],
@@ -43,8 +76,12 @@
         "origin": false
       },
       "eas": {
-        "projectId": "4f78cb33-9625-4820-992e-a019bde2c8a4"
+        "projectId": "04fbb383-797e-4fc0-b79f-816882a6dbb4"
       }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/4f78cb33-9625-4820-992e-a019bde2c8a4"
     }
   }
 }

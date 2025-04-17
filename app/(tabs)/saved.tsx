@@ -20,8 +20,12 @@ const SavedScreen = () => {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
 
+  // Add this to force refresh when bookmarks change
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const refreshBookmarks = async () => {
     await fetchBookmarks();
+    setRefreshKey((prev) => prev + 1); // Force refresh
   };
 
   // Fetch bookmarked news IDs from AsyncStorage
@@ -29,9 +33,10 @@ const SavedScreen = () => {
     try {
       const bookmarks = await AsyncStorage.getItem("bookmarks");
       if (bookmarks) {
-        setBookmarkedNews(JSON.parse(bookmarks));
+        const parsedBookmarks = JSON.parse(bookmarks);
+        console.log("Fetched Bookmarks:", parsedBookmarks); // Debug
+        setBookmarkedNews(parsedBookmarks);
       }
-      navigation.setParams({ refresh: false });
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
     }
@@ -42,16 +47,12 @@ const SavedScreen = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        console.log("No token found, please log in.");
-        return;
-      }
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
       const requests = newsIds.map((id) =>
-        axios.get(`https://lagosnawa.com/wp-json/wp/v2/posts/${id}?_embed`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        axios.get(`https://africanawa.com/wp-json/wp/v2/posts/${id}?_embed`, {
+          headers,
         })
       );
 
@@ -95,7 +96,7 @@ const SavedScreen = () => {
       item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
       "https://via.placeholder.com/150";
     const author = item._embedded?.author?.[0];
-    const authorName = author?.name || "Unknown Author";
+    const authorName = author?.name || "Africanawa";
     const authorImageUrl = author?.avatar_urls?.[96] || "";
     const title = item.title?.rendered || "No Title Available";
     const content = item.content?.rendered || "No content available";
@@ -159,7 +160,7 @@ const SavedScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} key={refreshKey}>
       <Text style={styles.bookmarkTitle}>Saved Bookmarks</Text>
       <FlatList
         data={newsData}
@@ -169,7 +170,7 @@ const SavedScreen = () => {
       />
     </View>
   );
-}
+};
 
 export default SavedScreen;
 
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#a80d0d",
+    color: "#4c270a",
     textShadowColor: "rgba(0, 0, 0, 0.2)", // Adds a cool shadow effect
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     width: "70%", // Full width of the container
     alignContent: "center",
     alignSelf: "center",
-    backgroundColor: "#a80d0d", // Button background color
+    backgroundColor: "#4c270a", // Button background color
     borderRadius: 25, // For cylindrical appearance
     paddingVertical: 15, // Vertical padding for height
     paddingHorizontal: 30, // Horizontal padding for width
@@ -244,4 +245,3 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
-

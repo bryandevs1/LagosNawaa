@@ -4,7 +4,7 @@ import Home from "./(tabs)/index";
 import Settings from "./(tabs)/settings";
 import Discover from "./(tabs)/discover";
 import Saved from "./(tabs)/saved";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons"; // Import FontAwesome 6 icons
 import { RouteProp } from "@react-navigation/native";
 
@@ -43,7 +43,7 @@ const screenOptions = ({
 
     return <FontAwesome5 name={iconName} size={20} color={color} />;
   },
-  tabBarActiveTintColor: "#a80d0d",
+  tabBarActiveTintColor: "#4c270a",
   tabBarInactiveTintColor: "#999",
   tabBarStyle: styles.tabBar,
   tabBarShowLabel: false,
@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
   tabBar: {
     position: "absolute", // Make tab bar float
     backgroundColor: "rgb(255, 255, 255)", // Glassy effect
-    paddingTop: 25,
+    paddingTop: Platform.OS === "android" ? 0 : 15, // Increased padding for Android
     borderRadius: 30, // Rounded corners
-    height: 90, // Increased height of the tab bar to ensure full icon visibility
+    height: 80, // Increased height of the tab bar to ensure full icon visibility
     borderWidth: 1, // Border for glassy effect
     borderColor: "rgba(255, 255, 255, 0.3)", // Light glassy border
     shadowColor: "#000", // Shadow color (iOS)

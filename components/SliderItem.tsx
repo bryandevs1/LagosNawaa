@@ -59,7 +59,7 @@ const SliderItem = ({ slideItem, index, scrollX }: Props) => {
     try {
       if (!authorId) return;
       const response = await axios.get(
-        `https://lagosnawa.com/wp-json/wp/v2/users/${authorId}`
+        `https://africanawa.com/wp-json/wp/v2/users/${authorId}`
       );
       if (response && response.data) {
         setAuthorName(response.data.name);

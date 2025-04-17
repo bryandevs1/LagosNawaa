@@ -40,7 +40,7 @@ const DeleteScreen = () => {
         };
 
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100",
+          "https://africanawa.com/wp-json/wp/v2/categories?per_page=100",
           config
         );
         const categoryOptions = response.data.map((cat) => ({
@@ -80,7 +80,7 @@ const DeleteScreen = () => {
     `;
 
     const options = {
-      recipients: ["admin@lagosnawa.com"], // Replace with the email address
+      recipients: ["admin@africanawa.com"], // Replace with the email address
       subject: `Deletion of account`,
       body: message,
     };
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#a80d0d", // Customize the color as needed
+    backgroundColor: "#4c270a", // Customize the color as needed
     justifyContent: "center",
     alignItems: "center",
     elevation: 3, // Add shadow for Android
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#a80d0d",
+    backgroundColor: "#4c270a",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",

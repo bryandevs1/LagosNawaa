@@ -20,38 +20,32 @@ import { useNavigation } from "@react-navigation/native"; // Import navigation h
 
 const UserScreen = () => {
   const navigation = useNavigation(); // Get navigation object
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [category, setCategory] = useState(""); // Selected category
-  const [categories, setCategories] = useState([]); // List of categories from API
-  const [tag, setTag] = useState("");
+  const [username, setUsername] = useState(""); // New state for username
+  const [reason, setReason] = useState(""); // Previously 'tag', renamed for clarity
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(true); // For showing loading spinner during fetch
+  const [loading, setLoading] = useState(true);
 
-  // Fetch categories from the WordPress site with Bearer token authorization
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add Bearer token to headers
-          },
-        };
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100",
-          config
+          "https://africanawa.com/wp-json/wp/v2/categories?per_page=100",
+          { headers }
         );
         const categoryOptions = response.data.map((cat) => ({
           label: cat.name,
           value: cat.name,
         }));
 
-        setCategories(categoryOptions); // Store fetched categories
-        setLoading(false); // Set loading to false after data is fetched
+        setCategories(categoryOptions);
+        setLoading(false);
       } catch (error) {
-        setLoading(false); // Stop loading on error
+        setLoading(false);
         Toast.show({
           type: "error",
           text1: "Error fetching categories",
@@ -63,9 +57,8 @@ const UserScreen = () => {
     fetchCategories();
   }, []);
 
-  // Function to handle the submission of data via email
   const handleSubmit = async () => {
-    if (!tag.trim()) {
+    if (!username.trim() || !reason.trim()) {
       Toast.show({
         type: "error",
         text1: "Validation Error",
@@ -78,20 +71,22 @@ const UserScreen = () => {
       const response = await axios.post(
         "https://back.ikoyiproperty.com:8443/report-newsuser",
         {
-          username: tag, // Assuming `tag` holds the username
-          reason: "User reported through the app.", // Add more dynamic reasons if needed
+          username,
+          reason,
         }
       );
 
       Toast.show({
         type: "success",
-        text1: "Report Submitted ",
+        text1: "Report Submitted",
         text2: `${response.data.message}. Please allow 24 hours`,
       });
+
       setTimeout(() => {
-        setTag(""); // Clear the input field
-        handleClose(); // Close the modal
-      }, 5000); // Close the modal after 3 seconds
+        setUsername("");
+        setReason("");
+        handleClose();
+      }, 5000);
     } catch (error) {
       console.error("Error submitting user report:", error);
       Toast.show({
@@ -102,9 +97,8 @@ const UserScreen = () => {
     }
   };
 
-  // Function to handle closing the screen
   const handleClose = () => {
-    navigation.goBack(); // Navigate back to the previous screen
+    navigation.goBack();
   };
 
   return (
@@ -113,13 +107,25 @@ const UserScreen = () => {
         <MaterialIcons name="close" size={30} color="#fff" />
       </TouchableOpacity>
 
+      {/* Username Input */}
+      <Text style={styles.label}>Username</Text>
+      <TextInput
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
+        placeholder="Enter the username to report"
+      />
+
+      {/* Reason Input */}
       <Text style={styles.label}>Reason</Text>
       <TextInput
         style={styles.input}
-        value={tag}
-        onChangeText={setTag}
-        placeholder="Provide the username to report"
+        value={reason}
+        onChangeText={setReason}
+        placeholder="Provide the reason for reporting"
+        multiline
       />
+
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Submit</Text>
       </TouchableOpacity>
@@ -154,7 +160,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#a80d0d", // Customize the color as needed
+    backgroundColor: "#4c270a", // Customize the color as needed
     justifyContent: "center",
     alignItems: "center",
     elevation: 3, // Add shadow for Android
@@ -194,7 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#a80d0d",
+    backgroundColor: "#4c270a",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",

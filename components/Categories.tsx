@@ -18,18 +18,12 @@ const Categories = ({ onCategoryChanged }: Props) => {
     try {
       const token = await AsyncStorage.getItem("userToken");
 
-      if (!token) {
-        console.log("No token found, please log in.");
-        return;
-      }
+      const URL =
+        "https://africanawa.com/wp-json/wp/v2/categories?per_page=100";
 
-      const URL = "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100";
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
-      const response = await axios.get(URL, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the request header
-        },
-      });
+      const response = await axios.get(URL, { headers });
 
       if (response && response.data) {
         setCategories([{ id: 0, name: "All", slug: "all" }, ...response.data]); // Add "All" option at the beginning

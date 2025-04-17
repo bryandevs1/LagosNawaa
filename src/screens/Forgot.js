@@ -39,7 +39,7 @@ const ForgotPassword = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        "https://lagosnawa.com/wp-json/custom/v1/lostpassword",
+        "https://africanawa.com/wp-json/custom/v1/lostpassword",
         { user_login: email }
       );
 
@@ -113,6 +113,8 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 100,
+    height: 100,
+
     alignSelf: "center",
   },
   textContainer: {

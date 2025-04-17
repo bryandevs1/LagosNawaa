@@ -18,13 +18,16 @@ const NewsList = ({ newsList }: Props) => {
       id: item.id, // Use item instead of slideItem
       title: item.title?.rendered,
       authorName: item._embedded?.author?.[0]?.name,
-      authorImageUrl: item._embedded?.author?.[0]?.avatar_urls?.["96"],
+      authorImageUrl:
+        item._embedded?.author?.[0]?.avatar_urls?.["96"] ||
+        Image.resolveAssetSource(logo).uri,
       date: item.date,
       content: item.content?.rendered,
       imageUrl:
         item._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
         "https://via.placeholder.com/150",
     });
+    console.log("Author name: ", item._embedded?.author?.[0]);
   };
 
   return (

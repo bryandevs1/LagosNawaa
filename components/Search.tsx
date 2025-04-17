@@ -5,40 +5,35 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { decode } from "html-entities"; // Use only `decode`
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Ensure AsyncStorage is imported
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 
 const Search = ({ route }: { route: any }) => {
   const searchResults = route?.params?.searchResults || [];
   const navigation = useNavigation();
   const { searchQuery } = route.params || {};
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false); // State to track loading
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchSearchResults = async () => {
-      setLoading(true); // Set loading to true before fetching
+      setLoading(true);
       try {
         const token = await AsyncStorage.getItem("userToken");
 
-        if (!token) {
-          console.log("No token found, please log in.");
-          setLoading(false);
-          return;
-        }
-
         const queryParam = searchQuery ? `&search=${searchQuery}` : "";
-        const URL = `https://lagosnawa.com/wp-json/wp/v2/posts?_embed${queryParam}`;
+        const URL = `https://africanawa.com/wp-json/wp/v2/posts?_embed${queryParam}`;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
         const response = await axios.get(URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers,
         });
 
         const fetchedResults = response.data || [];
@@ -47,7 +42,7 @@ const Search = ({ route }: { route: any }) => {
       } catch (err) {
         console.log("Error fetching search results:", err.message);
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       }
     };
 
@@ -97,9 +92,21 @@ const Search = ({ route }: { route: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.header}>
+          {searchQuery ? `Search Results for: "${searchQuery}"` : "Search"}
+        </Text>
+      </View>
+
       {loading ? (
-        // Show a loading spinner while fetching results
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
       ) : results.length > 0 ? (
         <FlatList
@@ -112,7 +119,7 @@ const Search = ({ route }: { route: any }) => {
           {searchQuery ? "No results found." : "Enter a search query."}
         </Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -123,6 +130,23 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: "#fff",
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  backButton: {
+    marginLeft: 10,
+  },
+  header: {
+    flex: 1, // Takes available space
+    alignItems: "center", // Centers the text
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
   },
   resultItem: {
     flexDirection: "row",

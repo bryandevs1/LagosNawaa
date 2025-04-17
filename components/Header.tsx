@@ -34,7 +34,7 @@ const Header = () => {
     >
       <Image
         source={{
-          uri: "https://lagosnawa.com/wp-content/themes/gorgo/assets/images/avatars/user-avatar.png",
+          uri: "https://africanawa.com/wp-content/themes/gorgo/assets/images/avatars/user-avatar.png",
         }}
         style={styles.profileImg}
       />

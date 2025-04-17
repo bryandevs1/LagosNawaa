@@ -32,12 +32,12 @@ const EmailScreen = () => {
     const fetchUserData = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
+
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/users/me",
+          "https://africanawa.com/wp-json/wp/v2/users/me",
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers,
           }
         );
         setUserData({
@@ -62,15 +62,14 @@ const EmailScreen = () => {
     const fetchCategories = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
         const config = {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add Bearer token to headers
-          },
+          headers,
         };
 
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100",
+          "https://africanawa.com/wp-json/wp/v2/categories?per_page=100",
           config
         );
         const categoryOptions = response.data.map((cat) => ({
@@ -210,7 +209,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#a80d0d", // Customize the color as needed
+    backgroundColor: "#4c270a", // Customize the color as needed
     justifyContent: "center",
     alignItems: "center",
     elevation: 3, // Add shadow for Android
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#a80d0d",
+    backgroundColor: "#4c270a",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",

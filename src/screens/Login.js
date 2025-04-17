@@ -17,6 +17,8 @@ import { theme } from "../constants/theme";
 import Spacing from "../constants/Spacing";
 import { Feather } from "@expo/vector-icons";
 import KeyboardAvoidingComponent from "../../components/KeyboardAvoidingView";
+import imagee from "../assets/logo.png"; // Adjust the path as necessary
+import { Button } from "../components/Button";
 
 const Login = ({ navigation }) => {
   const [isSecure, setIsSecure] = useState(true);
@@ -38,6 +40,24 @@ const Login = ({ navigation }) => {
     });
   };
 
+  const handleGuestLogin = async () => {
+    const universalApiKey =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNjg0OTU0NDAwfQ.V4xFvG9Jr7-Avj1BQ8DnTbrLoSW-DpNz9vpsB5wEJNA";
+
+    try {
+      await AsyncStorage.setItem("userName", "Guest");
+      await AsyncStorage.setItem("userEmail", "guest@africanawa.com");
+
+      console.log("Guest login successful. Navigating to Tabs...");
+
+      navigation.replace("Tabs"); // Ensure "Tabs" is correctly defined in navigation
+      showToast("success", "Logged in as Guest");
+    } catch (error) {
+      console.log("Guest login error:", error);
+      showToast("error", "Failed to continue as guest. Try again.");
+    }
+  };
+
   const handleLogin = async () => {
     if (!username) {
       showToast("error", "Username is required");
@@ -53,7 +73,7 @@ const Login = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        "https://lagosnawa.com/wp-json/jwt-auth/v1/token",
+        "https://africanawa.com/wp-json/jwt-auth/v1/token",
         {
           username,
           password,
@@ -86,7 +106,7 @@ const Login = ({ navigation }) => {
 
         // Fetch the user's profile to get the avatar URL
         const userProfileResponse = await axios.get(
-          `https://lagosnawa.com/wp-json/wp/v2/users/me`,
+          `https://africanawa.com/wp-json/wp/v2/users/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -119,7 +139,7 @@ const Login = ({ navigation }) => {
     <KeyboardAvoidingComponent>
       <SafeAreaView>
         <View style={styles.container}>
-          <Image style={styles.logo} source={require("../assets/chat.png")} />
+          <Image style={styles.logo} source={imagee} />
           <View style={styles.textContainer}>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
@@ -169,11 +189,18 @@ const Login = ({ navigation }) => {
               {loading ? "Logging in..." : "Login"}
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={styles.switch}>
               Don't have an Account?{" "}
               <Text style={{ fontWeight: 800 }}>Sign up Now</Text>
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={handleGuestLogin}
+          >
+            <Text style={styles.guestButtonText}>Continue Without Login</Text>
           </TouchableOpacity>
         </View>
 
@@ -190,6 +217,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 100,
+    height: 100,
     alignSelf: "center",
   },
   textContainer: {
@@ -263,6 +291,19 @@ const styles = StyleSheet.create({
     fontFamily: Font["poppins-bold"],
     fontSize: FontSize.medium,
     color: theme.colors.backgroundHighlightColor,
+  },
+  guestButton: {
+    marginTop: 15,
+    backgroundColor: "#ccc",
+    paddingVertical: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+
+  guestButtonText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

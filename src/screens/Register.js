@@ -140,7 +140,7 @@ const Register = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        "https://lagosnawa.com/wp-json/custom/v1/register", // Replace with your site URL
+        "https://africanawa.com/wp-json/custom/v1/register", // Replace with your site URL
         {
           name: fullName,
           username,
@@ -292,6 +292,8 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 100,
+    height: 100,
+
     alignSelf: "center",
   },
   textContainer: {

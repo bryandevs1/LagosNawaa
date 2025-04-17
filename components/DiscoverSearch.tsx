@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   ScrollView,
+  SafeAreaView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { decode } from "html-entities";
@@ -13,6 +14,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 
 const DiscoverSearch = ({ route }: { route: any }) => {
   const searchResults = route?.params?.searchResults || [];
@@ -27,13 +29,8 @@ const DiscoverSearch = ({ route }: { route: any }) => {
       setLoading(true);
       try {
         const token = await AsyncStorage.getItem("userToken");
-        if (!token) {
-          console.log("No token found, please log in.");
-          setLoading(false);
-          return;
-        }
 
-        const baseURL = "https://lagosnawa.com/wp-json/wp/v2/posts?_embed";
+        const baseURL = "https://africanawa.com/wp-json/wp/v2/posts?_embed";
         const queryParam = searchQuery ? `&search=${searchQuery}` : "";
         const categoryParam = selectedCategories.length
           ? `&categories=${selectedCategories.join(",")}`
@@ -41,8 +38,10 @@ const DiscoverSearch = ({ route }: { route: any }) => {
         const URL = `${baseURL}${queryParam}${categoryParam}`;
 
         console.log("Fetching URL:", URL);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
+
         const response = await axios.get(URL, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         });
 
         setResults(response.data || []);
@@ -98,7 +97,20 @@ const DiscoverSearch = ({ route }: { route: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {" "}
+      {/* Header Section */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.header}>
+          {searchQuery ? `Search Results for: "${searchQuery}"` : "Search"}
+        </Text>
+      </View>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
       ) : results.length > 0 ? (
@@ -114,7 +126,7 @@ const DiscoverSearch = ({ route }: { route: any }) => {
             : "Enter a search query or select categories."}
         </Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -125,6 +137,24 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: "#fff",
+  },
+
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  backButton: {
+    marginLeft: 10,
+  },
+  header: {
+    flex: 1, // Takes available space
+    alignItems: "center", // Centers the text
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
   },
   resultItem: {
     flexDirection: "row",

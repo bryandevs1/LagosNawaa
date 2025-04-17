@@ -9,6 +9,7 @@ import {
   Switch,
   Image,
   Animated,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
@@ -43,6 +44,7 @@ export default function ProfileScreen() {
   });
   const [selectedState, setSelectedState] = useState<string>("Lagos");
   const [isContactOptionsVisible, setContactOptionsVisible] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
   // Updated animation ref
   const contactOptionsHeight = useRef(new Animated.Value(0)).current;
@@ -67,6 +69,7 @@ export default function ProfileScreen() {
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
+
     Linking.openURL(mailtoUrl).catch((err) => {
       console.error("Failed to open email client:", err);
       Toast.show({
@@ -76,18 +79,62 @@ export default function ProfileScreen() {
       });
     });
   };
-  const reportBug = (email: string, subject: string, body: string) => {
-    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-    Linking.openURL(mailtoUrl).catch((err) => {
-      console.error("Failed to open email client:", err);
+
+  const reportBug = async (email: string, subject: string, body: string) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Authentication Required",
+          text2: "You need to be logged in to report a bug.",
+        });
+        return;
+      }
+
+      const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
+
+      Linking.openURL(mailtoUrl).catch((err) => {
+        console.error("Failed to open email client:", err);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Unable to open the email client.",
+        });
+      });
+    } catch (error) {
+      console.error("Error checking user token:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Unable to open the email client.",
+        text2: "Something went wrong. Please try again.",
       });
-    });
+    }
+  };
+  const reportUser = async (email: string, subject: string, body: string) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Authentication Required",
+          text2: "You need to be logged in to report a user.",
+        });
+        return;
+      }
+      navigation.navigate("Report user");
+    } catch (error) {
+      console.error("Error checking user token:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Something went wrong. Please try again.",
+      });
+    }
   };
 
   const navigateToContactOption = (screenName: string) => {
@@ -96,7 +143,11 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.multiRemove(["userToken", "userName"]);
+      await AsyncStorage.multiRemove([
+        "userToken",
+        "userName",
+        "bookmarks", // Add this to clear bookmarks
+      ]);
       Toast.show({
         type: "success",
         text1: "Logged Out",
@@ -130,13 +181,26 @@ export default function ProfileScreen() {
     fetchUserName();
   }, []);
 
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const name = await AsyncStorage.getItem("userToken");
+        if (name) setToken(name);
+      } catch (error) {
+        console.log("Error fetching user name: ", error);
+      }
+    };
+    fetchToken();
+  }, []);
+
   const fetchUserData = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
       if (token) {
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/users/me",
-          { headers: { Authorization: `Bearer ${token}` } }
+          "https://africanawa.com/wp-json/wp/v2/users/me",
+          { headers }
         );
         setUserData(response.data);
       } else {
@@ -168,22 +232,26 @@ export default function ProfileScreen() {
                 source={{
                   uri:
                     profilePicture ||
-                    "https://lagosnawa.com/wp-content/themes/gorgo/assets/images/avatars/user-avatar.png",
+                    "https://africanawa.com/wp-content/themes/gorgo/assets/images/avatars/user-avatar.png",
                 }}
                 style={styles.profileAvatar}
               />
               <View style={styles.profileBody}>
                 <Text style={styles.profileName}>
-                  {userData?.name || "User"}
+                  {userData?.name || "Guest User"}
                 </Text>
                 <Text style={styles.profileHandle}>@{userName}</Text>
               </View>
-              <FeatherIcon
-                onPress={() => navigation.navigate("EditProfile")}
-                color="#bcbcbc"
-                name="edit"
-                size={22}
-              />
+              {!token ? (
+                ""
+              ) : (
+                <FeatherIcon
+                  onPress={() => navigation.navigate("Edit Profile")}
+                  color="#bcbcbc"
+                  name="edit"
+                  size={22}
+                />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -221,6 +289,17 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Resources</Text>
           <View style={styles.sectionBody}>
             <View style={styles.rowWrapper}>
+              {!token ? (
+                ""
+              ) : (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("AddPost")}
+                  style={styles.row}
+                >
+                  <Text style={styles.rowLabel}>Add A Post</Text>
+                  <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.row}
                 onPress={toggleContactOptions}
@@ -243,7 +322,7 @@ export default function ProfileScreen() {
                   style={styles.contactOption}
                   onPress={() =>
                     sendEmail(
-                      "admin@lagosnawa.com",
+                      "admin@africanawa.com",
                       "Customer Support Inquiry",
                       "Hello, I need help with..."
                     )
@@ -260,22 +339,19 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.contactOption}
-                  onPress={() => openWebsite("https://lagosnawa.com")}
+                  onPress={() => openWebsite("https://africanawa.com")}
                 >
                   <Text style={styles.contactOptionText}>Visit Website</Text>
                 </TouchableOpacity>
               </Animated.View>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("Report user")}
-                style={styles.row}
-              >
+              <TouchableOpacity onPress={reportUser} style={styles.row}>
                 <Text style={styles.rowLabel}>Report User</Text>
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>
                   reportBug(
-                    "admin@lagosnawa.com",
+                    "admin@africanawa.com",
                     "Bug Report",
                     "Hello, I would love to report this bug..."
                   )
@@ -287,32 +363,52 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>
-                  openWebsite("https://lagosnawa.com/privacy-policy-3/")
+                  openWebsite("https://africanawa.com/privacy-policy/")
                 }
                 style={styles.row}
               >
                 <Text style={styles.rowLabel}>Terms and Privacy</Text>
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("Delete")}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Delete my account</Text>
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
+              {!token ? (
+                ""
+              ) : (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("Delete")}
+                  style={styles.row}
+                >
+                  <Text style={styles.rowLabel}>Delete my account</Text>
+                  <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+                </TouchableOpacity>
+              )}
+              {token ? (
+                ""
+              ) : (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: "Login" }],
+                    })
+                  }
+                  style={styles.row}
+                >
+                  <Text style={styles.rowLabel}>Login</Text>
+                  <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <View style={styles.sectionBody}>
+          {!token ? (
+            ""
+          ) : (
             <TouchableOpacity onPress={handleLogout} style={styles.row}>
-              <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
-                Log Out
-              </Text>
+              <Text style={[styles.rowLabelLogout]}>Log Out</Text>
             </TouchableOpacity>
-          </View>
+          )}
         </View>
         <Text style={styles.contentFooter}>App Version v1.0</Text>
       </ScrollView>
@@ -348,6 +444,7 @@ const styles = StyleSheet.create({
   /** Content */
   content: {
     paddingHorizontal: 16,
+    paddingBottom: Platform.OS === "android" ? 104 : 60,
   },
   contentFooter: {
     marginTop: -24,
@@ -467,7 +564,7 @@ const styles = StyleSheet.create({
     width: "100%",
     textAlign: "center",
     fontWeight: "600",
-    color: "#dc2626",
+    color: "#4c270a",
     marginTop: -32,
   },
 });

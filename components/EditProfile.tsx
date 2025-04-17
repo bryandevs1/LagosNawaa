@@ -17,12 +17,12 @@ const EditProfileScreen = () => {
   const fetchUserData = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
+
       const response = await axios.get(
-        "https://lagosnawa.com/wp-json/wp/v2/users/me",
+        "https://africanawa.com/wp-json/wp/v2/users/me",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers,
         }
       );
       setUserData({
@@ -46,15 +46,14 @@ const EditProfileScreen = () => {
       const updateData = {
         name: userData.name,
       };
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       };
 
       await axios.post(
-        "https://lagosnawa.com/wp-json/wp/v2/users/me",
+        "https://africanawa.com/wp-json/wp/v2/users/me",
         updateData,
         config
       );
@@ -63,7 +62,8 @@ const EditProfileScreen = () => {
         // Use Toast for success message
         type: "success",
         text1: "Success",
-        text2: "Profile updated! Name will be updated after next sucessful login",
+        text2:
+          "Profile updated! Name will be updated after next sucessful login",
         position: "top",
         visibilityTime: 4000,
       });
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#a80d0d",
+    borderColor: "#4c270a",
     padding: 10,
     marginBottom: 20,
     borderRadius: 5, // Rounded corners

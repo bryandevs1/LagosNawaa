@@ -27,7 +27,7 @@ const TermsOfService = ({ navigation }) => {
       <Text style={styles.header}>Terms of Service</Text>
       <ScrollView style={styles.scrollView}>
         <Text style={styles.termsText}>
-          Welcome to LagosNawa! By using this app, you agree to the following
+          Welcome to Africanawa! By using this app, you agree to the following
           terms:
           {"\n\n"}
           1. **No Objectionable Content**: You must not post or share any
@@ -45,7 +45,7 @@ const TermsOfService = ({ navigation }) => {
           5. **Account Termination**: Violation of these terms may result in the
           suspension or termination of your account.
           {"\n\n"}
-          By using LagosNawa, you agree to abide by these rules. Thank you for
+          By using Africanawa, you agree to abide by these rules. Thank you for
           keeping our community safe and respectful!
         </Text>
       </ScrollView>
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   button: {
-    backgroundColor: "#a80d0d",
+    backgroundColor: "#4c270a",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

@@ -3,10 +3,10 @@ import { Animated, Dimensions, Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Logo....
-import Logo from "../assets/chat.png";
+import Logo from "../assets/logo.png";
 import { Onboarding } from "./Onboarding";
 
-const BGColor = "#a80d0d";
+const BGColor = "#4c270a";
 
 export default function SplashScreen() {
   // SafeArea Value...
@@ -41,7 +41,7 @@ export default function SplashScreen() {
         }),
         Animated.timing(scaleLogo, {
           // Scaling to 0.35
-          toValue: 0.3,
+          toValue: 0.5,
           useNativeDriver: true,
         }),
         Animated.timing(scaleTitle, {
@@ -53,7 +53,7 @@ export default function SplashScreen() {
           // Moving to Right Most...
           toValue: {
             x: Dimensions.get("window").width / 2 - 35,
-            y: Dimensions.get("window").height / 2 - 5,
+            y: Dimensions.get("window").height / 2 - 15,
           },
           useNativeDriver: true,
         }),
@@ -122,7 +122,7 @@ export default function SplashScreen() {
               transform: [{ translateY: moveTitle.y }, { scale: scaleTitle }],
             }}
           >
-            LagosNawa
+            Africanawa
           </Animated.Text>
         </Animated.View>
       </Animated.View>

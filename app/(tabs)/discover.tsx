@@ -30,18 +30,12 @@ const Discover = (props: Props) => {
     try {
       const token = await AsyncStorage.getItem("userToken");
 
-      if (!token) {
-        Alert.alert("Error", "You are not logged in. Please log in again.");
-        return;
-      }
+      const URL =
+        "https://africanawa.com/wp-json/wp/v2/categories?per_page=100";
 
-      const URL = "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100";
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
 
-      const response = await axios.get(URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(URL, { headers });
 
       if (response?.data?.length) {
         // Filter out "All" category if it exists
@@ -86,13 +80,8 @@ const Discover = (props: Props) => {
     try {
       const token = await AsyncStorage.getItem("userToken");
 
-      if (!token) {
-        console.log("No token found, please log in.");
-        return;
-      }
-
       // Base URL
-      const baseURL = "https://lagosnawa.com/wp-json/wp/v2/posts?_embed";
+      const baseURL = "https://africanawa.com/wp-json/wp/v2/posts?_embed";
 
       // Prepare the query if searchQuery is provided
       const queryParam = searchQuery.trim()
@@ -117,9 +106,10 @@ const Discover = (props: Props) => {
       const fullURL = `${baseURL}${queryParam}${categoryParam}`;
 
       // Fetch data
-      const response = await axios.get(fullURL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}; // Use header only if token exists
+
+      const response = await axios.get(fullURL, { headers });
 
       // Navigate to Search results if data is found
       if (response && response.data) {

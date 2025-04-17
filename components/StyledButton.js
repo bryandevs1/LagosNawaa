@@ -15,7 +15,7 @@ const StyledButton = ({ onPress, title, disabled }) => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#a80d0d", // Change this to your desired color
+    backgroundColor: "#4c270a", // Change this to your desired color
     padding: 15,
     borderRadius: 5,
     alignItems: "center",

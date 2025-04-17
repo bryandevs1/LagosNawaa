@@ -7,7 +7,11 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity, // For custom button style
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingViewComponent,
+  KeyboardAvoidingView,
+  Platform, // For custom button style
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MailComposer from "expo-mail-composer";
@@ -17,45 +21,40 @@ import Toast from "react-native-toast-message"; // Import Toast
 import RNPickerSelect from "react-native-picker-select"; // Import the picker component
 import { MaterialIcons } from "@expo/vector-icons"; // Import icons
 import { useNavigation } from "@react-navigation/native"; // Import navigation hook
+import { Picker } from "@react-native-picker/picker";
 
 const AddPostScreen = () => {
-  const navigation = useNavigation(); // Get navigation object
+  const navigation = useNavigation();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState(""); // Selected category
-  const [categories, setCategories] = useState([]); // List of categories from API
-  const [tag, setTag] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState("");
   const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(true); // For showing loading spinner during fetch
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch categories from the WordPress site with Bearer token authorization
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add Bearer token to headers
-          },
-        };
-
         const response = await axios.get(
-          "https://lagosnawa.com/wp-json/wp/v2/categories?per_page=100",
-          config
+          "https://africanawa.com/wp-json/wp/v2/categories?per_page=100",
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
         );
-        const categoryOptions = response.data.map((cat) => ({
-          label: cat.name,
-          value: cat.name,
-        }));
 
-        setCategories(categoryOptions); // Store fetched categories
-        setLoading(false); // Set loading to false after data is fetched
+        setCategories(response.data);
+        setLoading(false);
       } catch (error) {
-        setLoading(false); // Stop loading on error
+        console.error("Error fetching categories:", error);
+        setLoading(false);
         Toast.show({
           type: "error",
-          text1: "Error fetching categories",
-          text2: "Please try again later.",
+          text1: "Error",
+          text2: "Failed to load categories",
         });
       }
     };
@@ -63,265 +62,378 @@ const AddPostScreen = () => {
     fetchCategories();
   }, []);
 
-  // Function to pick an image
+  // Image picker function
   const pickImage = async () => {
-    const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (result.granted) {
-      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+    try {
+      // First request permissions
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Toast.show({
+          type: "error",
+          text1: "Permission denied",
+          text2: "Sorry, we need camera roll permissions to select images",
+        });
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        base64: false, // Ensure base64 is disabled if you want to use URI
+        quality: 0.8,
       });
 
-      if (!pickerResult.cancelled) {
-        setImage(pickerResult.uri); // Store the URI of the selected image
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri); // Use the first selected image
+        console.log("Selected image URI:", result.assets[0].uri); // Debug log
       }
-    } else {
+    } catch (error) {
+      console.error("Image picker error:", error);
       Toast.show({
         type: "error",
-        text1: "Permission denied",
-        text2: "You need to enable permissions to use this feature.",
+        text1: "Error",
+        text2: "Failed to select image",
       });
     }
   };
+  // Upload image to WordPress
+  const uploadImage = async (uri) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) throw new Error("No authentication token");
 
-  // Function to handle the submission of data via email
-  const handleSubmit = async () => {
-    if (!title || !content || !category || !tag) {
+      const formData = new FormData();
+      formData.append("file", {
+        uri,
+        name: `upload_${Date.now()}.jpg`,
+        type: "image/jpeg",
+      });
+
+      const response = await axios.post(
+        "https://africanawa.com/wp-json/wp/v2/media",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.id; // Return media ID
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      throw error;
+    }
+  };
+
+  // Submit post directly to WordPress
+  const submitPost = async () => {
+    if (!title || !content || !category) {
       Toast.show({
         type: "error",
-        text1: "Validation Error",
-        text2: "Please fill in all fields.",
+        text1: "Error",
+        text2: "Title, content and category are required",
       });
       return;
     }
 
-    const message = `
-      Title: ${title}
-      Content: ${content}
-      Category: ${category}
-      Tag: ${tag}
-      Image: ${image ? image : "No image selected"}
-    `;
-
-    const options = {
-      recipients: ["bryanojji@outlook.com"], // Replace with the email address
-      subject: `New Post Submission: ${title}`,
-      body: message,
-      attachments: image ? [image] : [], // Attach the image URI
-    };
+    setIsSubmitting(true);
 
     try {
-      const emailResult = await MailComposer.composeAsync(options);
-      if (emailResult.status === "sent") {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Post information has been sent via email!",
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Email was not sent.",
-        });
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) throw new Error("Authentication required");
+
+      // Find category ID
+      const selectedCategory = categories.find((cat) => cat.name === category);
+      if (!selectedCategory) throw new Error("Invalid category selected");
+
+      // Process tags
+      let tagIds = [];
+      if (tags) {
+        // Split tags by comma and trim whitespace
+        const tagNames = tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag);
+
+        // Get or create tags and collect their IDs
+        for (const tagName of tagNames) {
+          const tagId = await getOrCreateTag(tagName, token);
+          if (tagId) tagIds.push(tagId);
+        }
       }
+
+      // Prepare post data
+      const postData = {
+        title,
+        content,
+        status: "draft",
+        categories: [selectedCategory.id],
+        tags: tagIds, // Use the array of tag IDs
+      };
+
+      // Upload image if selected
+      if (image) {
+        const mediaId = await uploadImage(image);
+        postData.featured_media = mediaId;
+      }
+
+      // Submit post
+      const response = await axios.post(
+        "https://africanawa.com/wp-json/wp/v2/posts",
+        postData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Post submitted successfully!",
+      });
+
+      // Reset form
+      setTitle("");
+      setContent("");
+      setCategory("");
+      setTags("");
+      setImage(null);
+
+      // Navigate back after successful submission
+      setTimeout(() => navigation.goBack(), 1500);
     } catch (error) {
+      console.error("Post submission failed:", error);
       Toast.show({
         type: "error",
-        text1: "Error sending email",
-        text2: "Please try again later.",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to submit post",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Function to handle closing the screen
-  const handleClose = () => {
-    navigation.goBack(); // Navigate back to the previous screen
-  };  
+  const getOrCreateTag = async (tagName, token) => {
+    try {
+      // First try to find existing tag
+      const searchResponse = await axios.get(
+        `https://africanawa.com/wp-json/wp/v2/tags?search=${encodeURIComponent(
+          tagName
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // If tag exists, return its ID
+      if (searchResponse.data && searchResponse.data.length > 0) {
+        return searchResponse.data[0].id;
+      }
+
+      // If tag doesn't exist, create it
+      const createResponse = await axios.post(
+        "https://africanawa.com/wp-json/wp/v2/tags",
+        {
+          name: tagName,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return createResponse.data.id;
+    } catch (error) {
+      console.error("Error processing tag:", tagName, error);
+      return null;
+    }
+  };
 
   return (
-    <View style={styles.modalContainer}>
-      {/* Circular X Button */}
-      <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-        <MaterialIcons name="close" size={30} color="#fff" />
-      </TouchableOpacity>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <MaterialIcons name="close" size={30} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Create New Post</Text>
+          <View style={{ width: 30 }} /> {/* Spacer for alignment */}
+        </View>
 
-      <Text style={styles.label}>Title</Text>
-      <TextInput
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Enter post title"
-      />
-      <Text style={styles.label}>Content</Text>
-      <TextInput
-        style={styles.textArea}
-        value={content}
-        onChangeText={setContent}
-        placeholder="Enter post content"
-        multiline={true}
-      />
-
-      <Text style={styles.label}>Category</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" /> // Show spinner while loading categories
-      ) : (
-        <RNPickerSelect
-          onValueChange={(value) => setCategory(value)}
-          items={categories}
-          style={pickerSelectStyles}
-          placeholder={{ label: "Select a category", value: null }}
+        <Text style={styles.label}>Title*</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter post title"
         />
-      )}
 
-      <Text style={styles.label}>Tag</Text>
-      <TextInput
-        style={styles.input}
-        value={tag}
-        onChangeText={setTag}
-        placeholder="Enter post tags"
-      />
+        <Text style={styles.label}>Content*</Text>
+        <TextInput
+          style={[styles.input, styles.contentInput]}
+          value={content}
+          onChangeText={setContent}
+          placeholder="Enter post content"
+          multiline
+          numberOfLines={6}
+        />
 
-      <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-        <Text style={styles.imagePickerText}>
-          {image ? "Change Image" : "Pick an Image"}
-        </Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Category*</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : (
+          <Picker
+            selectedValue={category}
+            onValueChange={setCategory}
+            style={{
+              width: "100%",
+              color: "#333", // Text color
+              fontSize: 16, // Text size
+              fontWeight: "bold",
+              backgroundColor: "#f5f5f5", // Background color
+              borderRadius: 10,
+            }}
+            itemStyle={{
+              fontSize: 18, // Font size inside the dropdown
+              fontWeight: "600",
+              color: "#222", // Text color inside dropdown
+            }}
+          >
+            <Picker.Item label="Select a category" value="" />
+            {categories.map((cat) => (
+              <Picker.Item key={cat.id} label={cat.name} value={cat.name} />
+            ))}
+          </Picker>
+        )}
 
-      {image && <Image source={{ uri: image }} style={styles.image} />}
+        <Text style={styles.label}>Tags</Text>
+        <TextInput
+          style={styles.input}
+          value={tags}
+          onChangeText={setTags}
+          placeholder="Comma separated tags (e.g., news, lagos, events)"
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit Post</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Featured Image</Text>
+        <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+          <Text style={styles.imageButtonText}>
+            {image ? "Change Image" : "Select Image"}
+          </Text>
+        </TouchableOpacity>
 
-      {/* Toast Component */}
-      <Toast />
-    </View>
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
+        )}
+
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+          onPress={submitPost}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Submit Post</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
-  modalContainer: {
-    position: "absolute",
-    bottom: 0,
-    height: "95%", // Make the modal cover 95% of the screen
-    width: "100%",
-    backgroundColor: "#fff", // Set background to white
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 70,
+  container: {
+    flexGrow: 1,
     padding: 20,
-    elevation: 10, // Add shadow for Android
-    shadowColor: "#000", // Add shadow for iOS
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    paddingBottom: 40,
+    paddingTop: 50,
   },
-  closeButton: {
-    position: "absolute",
-    top: 10,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#a80d0d", // Customize the color as needed
-    justifyContent: "center",
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    elevation: 3, // Add shadow for Android
-    shadowColor: "#000", // Add shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    // Add blurred background
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-    // Adjust blur radius as needed
-    filter: "blur(2px)",
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
   },
   label: {
     fontSize: 16,
-    marginBottom: 10,
     fontWeight: "600",
-    color: "#333",
+    marginBottom: 8,
+    marginTop: 16,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    backgroundColor: "#fff", // White background
-    padding: 15,
-    borderRadius: 10, // Rounded corners
-    marginBottom: 20,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+    marginBottom: 10,
   },
-  textArea: {
+  contentInput: {
+    height: 150,
+    textAlignVertical: "top",
+  },
+  picker: {
     borderWidth: 1,
     borderColor: "#ddd",
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    height: 120,
-    fontSize: 16,
-    marginBottom: 20,
+    borderRadius: 8,
+    marginBottom: 10,
   },
-  button: {
-    backgroundColor: "#a80d0d",
-    paddingVertical: 15,
-    borderRadius: 10,
+  imageButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
+    marginBottom: 10,
   },
-  buttonText: {
-    color: "#fff",
+  imageButtonText: {
     fontSize: 16,
-    fontWeight: "600",
+    color: "#333",
   },
-  container: {
-    flex: 1,
-    paddingTop: 100,
-    padding: 20,
-    backgroundColor: "#f7f7f7", // Light background
-  },
-  imagePickerButton: {
-    backgroundColor: "#ececec", // Grey background for image picker
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  imagePickerText: {
-    color: "#555", // Grey text
-    fontSize: 16,
-  },
-  image: {
+  previewImage: {
     width: "100%",
     height: 200,
-    borderRadius: 10, // Rounded corners for image
+    borderRadius: 8,
     marginBottom: 20,
   },
-});
-
-// Picker styles
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    color: "black",
-    paddingRight: 30, // To ensure the text is never behind the icon
+  submitButton: {
+    backgroundColor: "#4c270a",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
   },
-  inputAndroid: {
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    color: "black",
-    paddingRight: 30, // To ensure the text is never behind the icon
+  disabledButton: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 
